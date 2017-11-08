@@ -3,6 +3,24 @@ import PropTypes from 'prop-types';
 import styled, { keyframes } from 'styled-components';
 
 export default class Jewel extends Component {
+    constructor(props){
+        super(props);
+        console.log("contruct")
+    }
+
+    componentDidUpdate(){
+        console.log("updated");
+    }
+    componenDidMount(){
+        console.log("mounted");
+    }
+    componentWillUpdate(){
+        console.log("will update");
+    }
+    componentWillReceiveProps(nextprops){
+        console.log("Getting props");
+    }
+    
     render() {
         const color = this.props.jewelType;
         const { width, height, row, column, isSelected, animate } = this.props;
@@ -15,11 +33,11 @@ export default class Jewel extends Component {
               to {
                   transform: translateY(-100%);
               }`,
-              east = keyframes`
+            east = keyframes`
               to {
                   transform: translateX(100%);
               }`,
-              west = keyframes`
+            west = keyframes`
               to {
                   transform: translateX(-100%);
               }`;
@@ -42,7 +60,7 @@ export default class Jewel extends Component {
                 break;
             default:
                 animation = "";
-        }
+        };
 
         const JewelDiv = styled.div`
             position: absolute;
@@ -56,7 +74,9 @@ export default class Jewel extends Component {
             border: ${border};
             animation: ${animation};
             animation-fill-mode: forwards;
-            `
+            `;
+
+        
 
         return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}></JewelDiv>)
     }
