@@ -10,13 +10,12 @@ import Test from './components/Test'
 
 
 class App extends React.Component {
-    constructor(props) {
-        super(props);
-        this.initGame = this.initGame.bind(this);
-        this.onJewelClick = this.onJewelClick.bind(this);
-        this.state = { "selectedJewel": [], "animatingJewels": [], "jewelData": [] };
-        //console.log("app construct")
-    }
+    state = { "selectedJewel": [], "animatingJewels": [], "jewelData": [] };
+
+    _isAdjacent = (pos1, pos2) => (Math.abs(pos1[0] - pos2[0]) + Math.abs(pos1[1] - pos2[1])) === 1;
+    _basicJewelTypes = [0,1,2,3]//[0, 1, 2, 3, 4, 5, 6];
+    _numCols = 5;
+    _numRows = 5;
 
     componentDidMount() {
         //console.log("mounted")
@@ -28,26 +27,26 @@ class App extends React.Component {
         this.setState({ gameDivWidth, gameDivHeight, jewelWidth, jewelHeight });
     }
 
-    initGame() {
+    initGame = () => {
         console.log("starting the game");
-        const numCols = 3,
-            numRows = 3,
-            basicJewelTypes = ["orange", "blue", "pink", "green", "yellow", "white", "red"];
+        const { _numCols, _numRows, _basicJewelTypes } = this;
+
         let tempSet = [],
             tempJewel;
 
 
-        for (var a = 0; a < numCols; a++) {
-            for (var b = 0; b < numRows; b++) {
+        for (var a = 0; a < _numCols; a++) {
+            for (var b = 0; b < _numRows; b++) {
                 tempJewel = {
-                    "jewelType": basicJewelTypes[Math.floor(Math.random() * basicJewelTypes.length)],
+                    "jewelType": _basicJewelTypes[Math.floor(Math.random() * _basicJewelTypes.length)],
                     "row": b,
                     "column": a,
                     "onJewelClick": this.onJewelClick,
                     "width": this.state.jewelWidth,
                     "height": this.state.jewelHeight,
                     "animate": "static",
-                    "isSelected": false
+                    "isSelected": false,
+                    highLighted: false
                 }
 
 
@@ -55,83 +54,143 @@ class App extends React.Component {
             }
         }
 
-        this.setState({ "jewelData": tempSet, "selectedJewel": [] })
-       
+        this.setState({ "jewelData": tempSet, "selectedJewel": [] }, ()=>{console.log(this.checkForSequences())})
+
+    }
+
+
+    checkForSequences = () => {
+        console.log("checking for sequences")
+        let seqCt = 0;
+        /*
+                const t = this._basicJewelTypes.map(j => {
+                    return new Array(this._numRows).fill(null).map((r,i)=>{
+                        return new Array(this._numCols).fill(null).map((c,e)=>{
+                            console.log(i,e);
+                            return;
+                        })
+                        return r;
+                    })
+                });
+        */
+
+        const jewelTypeMatrix = new Array(this._numRows).fill(null).map((r, i) => {
+            return new Array(this._numCols).fill(null).map((c, e) => {
+                return this.state.jewelData.find(j => {
+                    return j.row === i && j.column === e
+                }).jewelType;
+            })
+        });
+        console.log(jewelTypeMatrix);
+
+        const matrixByTypeRow = this._basicJewelTypes.map(jtype => {
+            return jewelTypeMatrix.map(r => {
+                return r.map(c => {
+                    return c === jtype ? 1 : 0;
+                }).reduce((acc, curr) => {
+                    return acc + curr.toString()
+                })
+
+            })
+        });
+
+
+        const matrixByTypeCol = this._basicJewelTypes.map(jtype => {
+            return new Array(this._numCols).fill(null).map((c, ci) => {
+                return new Array(this._numRows).fill(null).map((r, ri) => {
+                    //console.log(ci, ri)
+                    return this.state.jewelData.find(j => j.row === ri && j.column === ci).jewelType === jtype ? 1 : 0;
+                }).reduce((acc, curr) => {
+                    return acc + curr.toString()
+                })
+
+            })
+        });
+
+
+        const checkThis = (jewelStringCts) => {
+            let found = []
+            jewelStringCts.forEach((r, ri) => {
+                //console.log(r)
+                //console.log(r.split("0"));
+                const segs = r.split("0").map(str => str.length)
+                //
+                if (segs.filter(rstr => rstr >= 3).length > 0) {
+                    //found min count
+                    console.log(segs);
+                    segs.forEach((s, ci) => {
+                        if (s >= 3) {
+                            //console.log(ri, ci, s);
+                            found.push({ row: ri, column: ci, count: s });
+                        }
+
+                    })
+
+                }
+
+
+            })
+            return found;
+        }
+
+
+        let seqPoints = [];
+        return matrixByTypeRow.map(jtype => {
+            const t = checkThis(jtype);
+            //console.log(t)
+            return t.map(sq=>{
+                return (this.state.jewelData.filter(j => { 
+                    return (j.column < (sq.column + sq.count) && j.column >= (sq.column)) &&
+                        (j.row===sq.row)
+                }))
+            })
+        }).filter(r=>r.length);
+        
     }
 
 
 
-
-
-    onJewelClick(row, col) {
-        console.log("jewel click ", row, col);
+    onJewelClick = (row, col) => {
         let tempJewelData = this.state.jewelData.map(j => {
             return { ...j, isSelected: (j.row === row && j.column === col) ? true : false, animate: "static" }
         });
-        let selectedJewel= [row, col]
-
-        /*for (var i = 0; i < tempJewelData.length; i++) {
-            if (tempJewelData[i].row == row && tempJewelData[i].column == col) {
-                tempJewelData[i].isSelected = true;
-                console.log("found")
-            }
-            else {
-                tempJewelData[i].isSelected = false;
-            }
-        }*/
-
+        let selectedJewel = [row, col]
 
         if (this.state.selectedJewel.length) {
             if (this.state.selectedJewel[0] !== row || this.state.selectedJewel[1] !== col) {
-                
+
 
                 //a new box has been selected
 
                 //check if its adjacent
 
-                const isAdjacent = Math.abs(this.state.selectedJewel[0] - row) + Math.abs(this.state.selectedJewel[1] - col);
-                console.log("adjacent??", isAdjacent, row, col, this.state.selectedJewel[0], this.state.selectedJewel[1])
+                const isAdjacent = this._isAdjacent(this.state.selectedJewel, [row, col])//Math.abs(this.state.selectedJewel[0] - row) + Math.abs(this.state.selectedJewel[1] - col);
 
-                if (isAdjacent === 1) {
-                    console.log("YES")
+                if (isAdjacent) {
                     const rowDiff = this.state.selectedJewel[0] - row,
                         colDiff = this.state.selectedJewel[1] - col;
 
                     selectedJewel = []//[selectedJewel[0]+rowDiff, selectedJewel[1]+colDiff]
                     let primaryDirection, secondaryDirection;
 
-                    let t = (Math.abs(rowDiff) ? (rowDiff > 0 ? ["south", "north"] : ["north", "south"]) : (colDiff < 0 ? ["east", "west"] : ["west", "east"]));
-                    console.log("t>>> ", t)
-
-
+                    let animationDirects = (Math.abs(rowDiff) ? (rowDiff > 0 ? ["south", "north"] : ["north", "south"]) : (colDiff < 0 ? ["east", "west"] : ["west", "east"]));
 
                     const lastJewel = {
                         ...tempJewelData.find((j => (j.row === this.state.selectedJewel[0] && j.column === this.state.selectedJewel[1]))),
-                        animate: t[1],
+                        animate: animationDirects[1],
                         isSelected: false
                     }
                     const currJewel = {
                         ...tempJewelData.find(j => (j.row === row && j.column === col)),
-                        animate: t[0],
+                        animate: animationDirects[0],
                         isSelected: false
                     };
 
-                    console.log(lastJewel, currJewel)
-                    console.log("~~~~~1 ", tempJewelData)
-                    //console.log([...this.state.jewelData.filter(j => (j.row !== row || j.column !== col))])
+
                     tempJewelData = [...tempJewelData.filter(j => (j.row !== row || j.column !== col) && (j.row !== lastJewel.row || j.column !== lastJewel.column)),
                     { ...currJewel, row: lastJewel.row, column: lastJewel.column },
                     { ...lastJewel, row: row, column: col }];
-                    //tempJewelData = [...tempJewelData.filter(j => (j.row !== lastJewel.row || j.column !== lastJewel.column)), ];
 
-                    console.log("~~~~~2 ", tempJewelData)
-
-
-
-                    /*this.setState({"selectedJewel": [], 
-                                   "animatingJewels": [{"jewelRow":row, "jewelCol": col, "animation": secondaryDirection},
-                                                       {"jewelRow":this.state.selectedJewel[0], "jewelCol": this.state.selectedJewel[1], "animation": primaryDirection}]})
-                                                       */
 
 
                 }
@@ -161,7 +220,8 @@ class App extends React.Component {
 
     render() {
         //styled components block the triggering of children component lifecycles
-        console.log("MAIN ", this.state.selectedJewel)
+
+        const jewels = this.state.jewelData.map((j, i) => <Jewel key={"jewel" + i}  {...j} />)
         return (<div>
             <h1>Simple Bejeweled Clone</h1>
             <button onClick={this.initGame}>Start/Restart</button>
@@ -173,19 +233,11 @@ class App extends React.Component {
                 {this.state.jewelData.length > 0 &&
 
                     <div>
-                        <Jewel {...this.state.jewelData[0]} />
-                        <Jewel {...this.state.jewelData[1]} />
-                        <Jewel {...this.state.jewelData[2]} />
-                        <Jewel {...this.state.jewelData[3]} />
-                        <Jewel {...this.state.jewelData[4]} />
-                        <Jewel {...this.state.jewelData[5]} />
-                        <Jewel {...this.state.jewelData[6]} />
-                        <Jewel {...this.state.jewelData[7]} />
-                        <Jewel {...this.state.jewelData[8]} />
+                        {jewels}
 
                     </div>}
             </div>
-        </div>);
+        </div >);
     }
 }
 
