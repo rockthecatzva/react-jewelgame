@@ -8,17 +8,17 @@ export default class Jewel extends Component {
         console.log("contruct")
     }
 
+    shouldComponentUpdate(nextProps, nextState){
+        if(this.props.isSelected!==nextProps.isSelected || this.props.animate!==nextProps.animate){
+            return true;
+        }
+
+        return true;
+    }
+
+
     componentDidUpdate(){
-        console.log("updated");
-    }
-    componenDidMount(){
-        console.log("mounted");
-    }
-    componentWillUpdate(){
-        console.log("will update");
-    }
-    componentWillReceiveProps(nextprops){
-        console.log("Getting props");
+        console.log("updated!!")
     }
     
     render() {
@@ -27,58 +27,67 @@ export default class Jewel extends Component {
         const border = isSelected ? "solid 5px black" : "none 0px";
         const north = keyframes`
         to {
-            transform: translateY(100%);
+            transform: translateY(-100%);
         }`,
             south = keyframes`
               to {
-                  transform: translateY(-100%);
+                transform: translateY(100%);
               }`,
             east = keyframes`
               to {
-                  transform: translateX(100%);
+                transform: translateX(-100%);
               }`,
             west = keyframes`
               to {
-                  transform: translateX(-100%);
+                transform: translateX(100%);
               }`;
 
 
         let animation = "";
+        let startR = row, startC= column;
+
+        
 
         switch (animate) {
             case "north":
                 animation = north + " 0.20s linear";
+                startR +=1;
                 break;
             case "south":
                 animation = south + " 0.20s linear";
+                startR -=1;
                 break;
             case "east":
                 animation = east + " 0.20s linear";
+                startC +=1;
                 break;
             case "west":
                 animation = west + " 0.20s linear";
+                startC -=1;
                 break;
             default:
                 animation = "";
         };
 
+
+        
+
         const JewelDiv = styled.div`
             position: absolute;
             box-sizing: border-box;
             background-color: ${color};
-            color: white;
             height: ${height + "px"};
             width: ${width + "px"};
-            top: ${(row * height) + "px"};
-            left: ${(column * width) + "px"};
+            top: ${ (startR * height) + "px"};
+            left: ${(startC * width) + "px"};
             border: ${border};
             animation: ${animation};
             animation-fill-mode: forwards;
             `;
 
         
-
-        return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}></JewelDiv>)
+        
+        return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}><p className="temp-label">{row + " , " + column}</p></JewelDiv>)
     }
 }
 
