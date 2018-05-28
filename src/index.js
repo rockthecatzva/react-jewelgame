@@ -13,16 +13,16 @@ class App extends React.Component {
     state = { "selectedJewel": [], "animatingJewels": [], "jewelData": [] };
 
     _isAdjacent = (pos1, pos2) => (Math.abs(pos1[0] - pos2[0]) + Math.abs(pos1[1] - pos2[1])) === 1;
-    _basicJewelTypes = [0,1,2,3]//[0, 1, 2, 3, 4, 5, 6];
-    _numCols = 5;
-    _numRows = 5;
+    _basicJewelTypes = [0, 1, 2, 3]//[0, 1, 2, 3, 4, 5, 6];
+    _numCols = 8;
+    _numRows = 8;
 
     componentDidMount() {
         //console.log("mounted")
         const gameDivWidth = 400,
             gameDivHeight = 300,
-            jewelWidth = (1 / 5) * gameDivWidth,
-            jewelHeight = (1 / 5) * gameDivHeight;
+            jewelWidth = (1 / this._numCols) * gameDivWidth,
+            jewelHeight = (1 / this._numRows) * gameDivHeight;
 
         this.setState({ gameDivWidth, gameDivHeight, jewelWidth, jewelHeight });
     }
@@ -54,7 +54,7 @@ class App extends React.Component {
             }
         }
 
-        this.setState({ "jewelData": tempSet, "selectedJewel": [] }, ()=>{console.log(this.checkForSequences())})
+        this.setState({ "jewelData": tempSet, "selectedJewel": [] }, () => { console.log(this.checkForSequences()) })
 
     }
 
@@ -62,17 +62,6 @@ class App extends React.Component {
     checkForSequences = () => {
         console.log("checking for sequences")
         let seqCt = 0;
-        /*
-                const t = this._basicJewelTypes.map(j => {
-                    return new Array(this._numRows).fill(null).map((r,i)=>{
-                        return new Array(this._numCols).fill(null).map((c,e)=>{
-                            console.log(i,e);
-                            return;
-                        })
-                        return r;
-                    })
-                });
-        */
 
         const jewelTypeMatrix = new Array(this._numRows).fill(null).map((r, i) => {
             return new Array(this._numCols).fill(null).map((c, e) => {
@@ -81,7 +70,6 @@ class App extends React.Component {
                 }).jewelType;
             })
         });
-        console.log(jewelTypeMatrix);
 
         const matrixByTypeRow = this._basicJewelTypes.map(jtype => {
             return jewelTypeMatrix.map(r => {
@@ -90,7 +78,6 @@ class App extends React.Component {
                 }).reduce((acc, curr) => {
                     return acc + curr.toString()
                 })
-
             })
         });
 
@@ -114,14 +101,15 @@ class App extends React.Component {
                 //console.log(r)
                 //console.log(r.split("0"));
                 const segs = r.split("0").map(str => str.length)
-                //
+                //console.log(segs)
                 if (segs.filter(rstr => rstr >= 3).length > 0) {
                     //found min count
                     console.log(segs);
                     segs.forEach((s, ci) => {
                         if (s >= 3) {
                             //console.log(ri, ci, s);
-                            found.push({ row: ri, column: ci, count: s });
+                            console.log(r.indexOf("111"), r)
+                            found.push({ row: ri, column: r.indexOf("111"), count: s });
                         }
 
                     })
@@ -135,17 +123,51 @@ class App extends React.Component {
 
 
         let seqPoints = [];
-        return matrixByTypeRow.map(jtype => {
+        //this works - now do it for cols!
+        // matrixByTypeRow.forEach(jtype => {
+        //     const t = checkThis(jtype);
+        //     console.log(t)
+        //     t.forEach(sq => {
+        //         let x = this.state.jewelData.filter(j => {
+        //             return (j.column < (sq.column + sq.count) && j.column >= (sq.column)) &&
+        //                 (j.row === sq.row)
+        //         });
+        //         //console.log(x);
+        //         if (x.length > 0) {
+        //             seqPoints = [...seqPoints, ...x];
+        //         }
+        //     });
+        // })
+
+        matrixByTypeCol.forEach(jtype => {
             const t = checkThis(jtype);
-            //console.log(t)
-            return t.map(sq=>{
-                return (this.state.jewelData.filter(j => { 
+            console.log(t)
+            t.forEach(sq => {
+                let x = this.state.jewelData.filter(j => {
                     return (j.column < (sq.column + sq.count) && j.column >= (sq.column)) &&
-                        (j.row===sq.row)
-                }))
+                        (j.row === sq.row)
+                });
+                //console.log(x);
+                if (x.length > 0) {
+                    seqPoints = [...seqPoints, ...x];
+                }
+            });
+        })
+
+        this.setState({
+            jewelData: this.state.jewelData.map((j, i) => {
+                if (seqPoints.filter(sq => (sq.row === j.row && sq.column === j.column)).length) {
+                    //console.log("FOUND!!!")
+                    return { ...j, highLighted: true }
+                }
+                else {
+                    //console.log("NOT FOUND")
+                    return { ...j, highLighted: false }
+                }
             })
-        }).filter(r=>r.length);
-        
+        })
+
+
     }
 
 
