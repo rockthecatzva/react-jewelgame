@@ -95,7 +95,7 @@ class App extends React.Component {
         });
 
 
-        const checkThis = (jewelStringCts) => {
+        const checkThis = (jewelStringCts, rowname = "row", colname = "column") => {
             let found = []
             jewelStringCts.forEach((r, ri) => {
                 //console.log(r)
@@ -109,7 +109,7 @@ class App extends React.Component {
                         if (s >= 3) {
                             //console.log(ri, ci, s);
                             console.log(r.indexOf("111"), r)
-                            found.push({ row: ri, column: r.indexOf("111"), count: s });
+                            found.push({ [rowname]: ri, [colname]: r.indexOf("111"), count: s });
                         }
 
                     })
@@ -118,41 +118,39 @@ class App extends React.Component {
 
 
             })
-            return found;
-        }
-
-
-        let seqPoints = [];
-        //this works - now do it for cols!
-        // matrixByTypeRow.forEach(jtype => {
-        //     const t = checkThis(jtype);
-        //     console.log(t)
-        //     t.forEach(sq => {
-        //         let x = this.state.jewelData.filter(j => {
-        //             return (j.column < (sq.column + sq.count) && j.column >= (sq.column)) &&
-        //                 (j.row === sq.row)
-        //         });
-        //         //console.log(x);
-        //         if (x.length > 0) {
-        //             seqPoints = [...seqPoints, ...x];
-        //         }
-        //     });
-        // })
-
-        matrixByTypeCol.forEach(jtype => {
-            const t = checkThis(jtype);
-            console.log(t)
-            t.forEach(sq => {
+            //return found;
+            let seqPoints=[];
+            found.forEach(sq => {
                 let x = this.state.jewelData.filter(j => {
-                    return (j.column < (sq.column + sq.count) && j.column >= (sq.column)) &&
-                        (j.row === sq.row)
+                    return (j[colname] < (sq[colname] + sq.count) && j[colname] >= (sq[colname])) &&
+                        (j[rowname] === sq[rowname])
                 });
                 //console.log(x);
                 if (x.length > 0) {
                     seqPoints = [...seqPoints, ...x];
                 }
             });
+
+            return seqPoints;
+        }
+
+
+        let seqPoints = [];
+        
+        matrixByTypeRow.forEach(jtype => {
+            const t = checkThis(jtype);
+            seqPoints = [...seqPoints, ...t];
         })
+
+
+
+        matrixByTypeCol.forEach(jtype => {
+            const t = checkThis(jtype, "column", "row");
+            seqPoints = [...seqPoints, ...t];
+        })
+        
+
+        //console.log(seqPoints)
 
         this.setState({
             jewelData: this.state.jewelData.map((j, i) => {
