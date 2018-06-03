@@ -132,16 +132,18 @@ class App extends React.Component {
 
         let seqPoints = [];
 
+        matrixByTypeCol.map(jtype => {
+            const t = checkThis(jtype, "columns", "column", "row");
+            seqPoints = [...seqPoints, ...t];
+        })
+
         matrixByTypeRow.map(jtype => {
             const t = checkThis(jtype, "rows");
             seqPoints = [...seqPoints, ...t];
         })
 
 
-        matrixByTypeCol.map(jtype => {
-            const t = checkThis(jtype, "columns", "column", "row");
-            seqPoints = [...seqPoints, ...t];
-        })
+        
 
         //console.log(seqPoints);
         //eliminate a seq:
@@ -166,7 +168,7 @@ class App extends React.Component {
             else {
                 //columns-oriented direction
                 elimJewels = this.state.jewelData.filter(j => j.column === seqPoints[0].column && j.row < (seqPoints[0].row + seqPoints[0].count) && j.row >= seqPoints[0].row);
-                normalJewels = this.state.jewelData.filter(j => j.column !== seqPoints[0].column && j.row > (seqPoints[0].row + seqPoints[0].count) && j.row <= seqPoints[0].row);//flip who has the =
+                normalJewels = this.state.jewelData.filter(j => j.column !== seqPoints[0].column || j.row >= (seqPoints[0].row + seqPoints[0].count) || j.row < seqPoints[0].row);//flip who has the =
             }
             //return this.state.jewelData.filter(j=>j.row===s)
 
