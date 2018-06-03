@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import styled, { keyframes } from 'styled-components';
 
 export default class Jewel extends Component {
+    _animDuration = ".40s";
 
     render() {
         //const color = this.props.jewelType;
@@ -37,45 +38,47 @@ export default class Jewel extends Component {
 
         const { width, height, row, column, isSelected, animate, highLighted } = this.props;
         const border = isSelected ? "solid 5px black" : "none 0px";
+        const shiftPercent = animate.magnitude * 100;
+
         const north = keyframes`
         to {
-            transform: translateY(-100%);
+            transform: translateY(-${shiftPercent}%);
         }`,
             south = keyframes`
               to {
-                transform: translateY(100%);
+                transform: translateY(${shiftPercent}%);
               }`,
             east = keyframes`
               to {
-                transform: translateX(-100%);
+                transform: translateX(-${shiftPercent}%);
               }`,
             west = keyframes`
               to {
-                transform: translateX(100%);
+                transform: translateX(${shiftPercent}%);
               }`;
 
 
         let animation = "";
         let startR = row, startC = column;
 
+        const { _animDuration } = this;
 
-
-        switch (animate) {
+        switch (animate.direction) {
             case "north":
-                animation = north + " 0.20s linear";
-                startR += 1;
+                animation = north + " " + _animDuration + " linear";
+                startR += animate.magnitude;
                 break;
             case "south":
-                animation = south + " 0.20s linear";
-                startR -= 1;
+                animation = south + " " + _animDuration + " linear";
+                startR -= animate.magnitude;
                 break;
             case "east":
-                animation = east + " 0.20s linear";
-                startC += 1;
+                animation = east + " " + _animDuration + " linear";
+                startC += animate.magnitude;
                 break;
             case "west":
-                animation = west + " 0.20s linear";
-                startC -= 1;
+                animation = west + " " + _animDuration + " linear";
+                startC -= animate.magnitude;
                 break;
             default:
                 animation = "";
@@ -88,7 +91,7 @@ export default class Jewel extends Component {
             position: absolute;
             box-sizing: border-box;
             padding: 5px 5px;
-            background-color: ${highLighted? "yellow":"none"};
+            background-color: ${highLighted ? "yellow" : "none"};
             height: ${height + "px"};
             width: ${width + "px"};
             top: ${ (startR * height) + "px"};
@@ -102,6 +105,9 @@ export default class Jewel extends Component {
     
             `;
 
+        if(animate.direction!=="static"){
+            console.log(row, column, startR, startC,  animate.magnitude, )
+        }
 
         return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}><img className="jewel-image" src={"images/png/" + bg} /></JewelDiv>)
     }
@@ -115,6 +121,6 @@ Jewel.propTypes = {
     width: PropTypes.number.isRequired,
     height: PropTypes.number.isRequired,
     isSelected: PropTypes.bool.isRequired,
-    animate: PropTypes.string.isRequired,
+    animate: PropTypes.object.isRequired,
     highLighted: PropTypes.bool.isRequired
 }
