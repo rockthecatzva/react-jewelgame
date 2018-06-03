@@ -55,7 +55,12 @@ export default class Jewel extends Component {
             west = keyframes`
               to {
                 transform: translateX(${shiftPercent}%);
-              }`;
+              }`,
+            shrink = keyframes`
+              to {
+                  transform: scale(0);
+              }
+            `;
 
 
         let animation = "";
@@ -64,6 +69,9 @@ export default class Jewel extends Component {
         const { _animDuration } = this;
 
         switch (animate.direction) {
+            case "shrink":
+                animation = shrink + " " + _animDuration + " linear"
+                break;
             case "north":
                 animation = north + " " + _animDuration + " linear";
                 startR += animate.magnitude;
@@ -105,15 +113,15 @@ export default class Jewel extends Component {
     
             `;
 
-        if(animate.direction!=="static"){
-            console.log(row, column, startR, startC,  animate.magnitude, )
+        if (animate.direction === "shrink") {
+            console.log("SHRINKING ", row, column, startR, startC, animation, west, shrink )
         }
 
         return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}><img className="jewel-image" src={"images/png/" + bg} /></JewelDiv>)
     }
 }
 
-Jewel.propTypes = {
+Jewel.PropTypes = {
     jewelType: PropTypes.number.isRequired,
     onJewelClick: PropTypes.func.isRequired,
     row: PropTypes.number.isRequired,

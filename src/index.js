@@ -2,6 +2,7 @@ import registerServiceWorker from './registerServiceWorker';
 import React from 'react';
 import { render } from 'react-dom';
 import styled, { } from 'styled-components';
+import { range, max } from 'ramda';
 //import GameSurface from './components/GameSurface';
 import Jewel from './components/Jewel'
 import './style.css';
@@ -50,14 +51,44 @@ class App extends React.Component {
             }
         }
 
-        this.setState({ "jewelData": tempSet, "selectedJewel": [] }, () => {  setInterval( this.checkForSequences(), 1000) })
+        this.setState({ "jewelData": tempSet, "selectedJewel": [] }, () => { this.keepReplacingSequence() })
 
     }
 
 
+    keepReplacingSequence = (elimJewels = []) => {
+        setTimeout(() => {
+            let seqs = this.checkForSequences();
+            
+            if (seqs) {
+                this.animateCollapse(seqs, (jewelOb) => {
+                    // const c = range(0, Math.max(...this.state.jewelData.map(j => j.column))) //this.state.jewelData.reduce((acc,curr)=>{}, [])
+                    // console.log(
+                    //     c.map((v, i) => {
+                    //         return this.state.jewelData.filter(j => j.column === v).length
+                    //     }))
+
+                    console.log("collapse complete - ", jewelOb.active)
+
+                    
+                    setTimeout(()=>{this.animateRemoval(jewelOb, (j)=>{
+                        
+                        console.log("removal complete ", j.active, this.state.jewelData);
+                        this.keepReplacingSequence();
+                    })}, 225);
+                    
+                    
+                    //
+
+                });
+            }
+        }, 1000)
+
+    }
+
     checkForSequences = () => {
         let jewelData = this.state.jewelData
-        //console.log("checking for sequences")
+        console.log("checking for sequences")
         //console.log(jdata, this.state.jewelData)
         let seqCt = 0;
 
@@ -65,7 +96,7 @@ class App extends React.Component {
             return new Array(this._numCols).fill(null).map((c, e) => {
                 return jewelData.filter(j => {
                     return j.row === i && j.column === e
-                }).reduce((acc,curr)=>curr.jewelType, null);
+                }).reduce((acc, curr) => curr.jewelType, null);
             })
         });
 
@@ -84,7 +115,7 @@ class App extends React.Component {
             return new Array(this._numCols).fill(null).map((c, ci) => {
                 return new Array(this._numRows).fill(null).map((r, ri) => {
                     //console.log(ci, ri)
-                    return jewelData.filter(j => j.row === ri && j.column === ci).reduce((acc,curr)=>curr.jewelType,null) === jtype ? 1 : 0;
+                    return jewelData.filter(j => j.row === ri && j.column === ci).reduce((acc, curr) => curr.jewelType, null) === jtype ? 1 : 0;
                 }).reduce((acc, curr) => {
                     return acc + curr.toString()
                 })
@@ -93,7 +124,7 @@ class App extends React.Component {
         });
 
 
-        const checkThis = (jewelStringCts, direction, rowname = "row", colname = "column") => {
+        const matrixToObject = (jewelStringCts, direction, rowname = "row", colname = "column") => {
             //a function that gets a binary-string representing a row or col of a 
             //jewel-type - indicating where its members are located
             //returns info on which binary-strings contain patterns
@@ -110,43 +141,26 @@ class App extends React.Component {
             });
 
             //found is raw r,c,span ob
-            //console.log(found)
             return found;
-
-
-            /*
-            //flattens it out to an array of points by jewel-type
-            let seqPoints = [];
-            found.forEach(sq => {
-                let x = jewelData.filter(j => {
-                    return (j[colname] < (sq[colname] + sq.count) && j[colname] >= (sq[colname])) &&
-                        (j[rowname] === sq[rowname])
-                });
-                if (x.length > 0) {
-                    seqPoints = [...seqPoints, ...x];
-                }
-            });
-            return seqPoints;
-            */
         }
 
         let seqPoints = [];
 
         matrixByTypeCol.map(jtype => {
-            const t = checkThis(jtype, "columns", "column", "row");
+            const t = matrixToObject(jtype, "columns", "column", "row");
             seqPoints = [...seqPoints, ...t];
         })
 
         matrixByTypeRow.map(jtype => {
-            const t = checkThis(jtype, "rows");
+            const t = matrixToObject(jtype, "rows");
             seqPoints = [...seqPoints, ...t];
         })
 
-
+        //mutating.....!
+        seqPoints = seqPoints.sort((a, b) => b.count - a.count);
+        //return seqPoints.sort((a, b) => b.count - a.count);
         
 
-        //console.log(seqPoints);
-        //eliminate a seq:
         if (seqPoints.length) {
             //need ramda for these fills...
 
@@ -170,97 +184,67 @@ class App extends React.Component {
                 elimJewels = this.state.jewelData.filter(j => j.column === seqPoints[0].column && j.row < (seqPoints[0].row + seqPoints[0].count) && j.row >= seqPoints[0].row);
                 normalJewels = this.state.jewelData.filter(j => j.column !== seqPoints[0].column || j.row >= (seqPoints[0].row + seqPoints[0].count) || j.row < seqPoints[0].row);//flip who has the =
             }
-            //return this.state.jewelData.filter(j=>j.row===s)
 
-
-            console.log(elimJewels, normalJewels)
-            const cols = elimJewels.map(j => j.column),
-                rows = elimJewels.map(j => j.row),
-                colRange = [Math.min(...cols), Math.max(...cols)],
-                rowRange = [Math.min(...rows), Math.max(...rows)];
-            let center, dist, direct;
-            let centerRow, centerCol;
-
-            const animateElimJewels = elimJewels.map(ej => {
-                //console.log((ej.row))
-
-                if (Math.abs(colRange[0] - colRange[1]) > 0) {
-                    //movement on cols
-                    //calc distance from center
-                    center = ((colRange[1] > colRange[0]) ? colRange[0] : colRange[1]) + (Math.abs(colRange[1] - colRange[0]) / 2)
-                    centerCol = center;
-                    centerRow = ej.row;
-                    dist = center - ej.column;
-                    direct = dist > 0 ? "west" : "east";
-
-                    
-                }
-                else {
-                    //movement on row;
-                    center = ((rowRange[1] > rowRange[0]) ? rowRange[0] : rowRange[1]) + (Math.abs(rowRange[1] - rowRange[0]) / 2)
-                    dist = center - ej.row;
-                    direct = dist > 0 ? "north" : "south";
-                    centerCol = ej.column;
-                    centerRow = center;
-                    
-                }
-
-
-                //TEMP!!!!
-                //direct = "static"
-                //dist = 0
-
-                console.log("cemter: ", centerRow, centerCol)
-                return { ...ej, row: centerRow, column: centerCol, highLighted: true, animate: { direction: direct, magnitude: Math.abs(dist) } }
-            })
-
-
-            console.log([...animateElimJewels, ...normalJewels.map(j=>{return {...j, animate: {direction:"static"}}})])
-            //debugger
-            this.setState({jewelData: [...animateElimJewels, ...normalJewels.map(j=>{return {...j, animate: {direction:"static"}}})]});
-
+            return {active: elimJewels, normal: normalJewels}
         }
 
-
-        /*
-        //STACK ALL POINTS IN A FLAT ARRAY - FOR HIGLIGHTING
-        let seqPoints = [];
-
-        matrixByTypeRow.forEach(jtype => {
-            const t = checkThis(jtype);
-            seqPoints = [...seqPoints, ...t];
-        })
-
-
-
-        matrixByTypeCol.forEach(jtype => {
-            const t = checkThis(jtype, "column", "row");
-            seqPoints = [...seqPoints, ...t];
-        })
-
-
-
-        console.log(seqPoints)*/
-
-        /*
-        //UPDATE THE STATE TO SHOW HIGHLIGHTING
-        this.setState({
-            jewelData: jewelData.map((j, i) => {
-                if (seqPoints.filter(sq => (sq.row === j.row && sq.column === j.column)).length) {
-                    //console.log("FOUND!!!")
-                    return { ...j, highLighted: true }
-                }
-                else {
-                    //console.log("NOT FOUND")
-                    return { ...j, highLighted: false }
-                }
-            })
-        })*/
-
-
-
+        return undefined;
 
     }
+
+
+    animateRemoval(jewelOb, onNext){
+        const active = jewelOb.active.map(j=>{return {...j, animate: {direction: "shrink"}}});
+        const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+
+        this.setState({ jewelData: [...active,  ...normal] }, ()=>{onNext({active, normal})} );
+    }
+
+
+
+
+    animateCollapse(jewelOb, onNext) {
+        
+        let elimJewels = jewelOb.active,
+            normalJewels = jewelOb.normal;
+
+        console.log(elimJewels, normalJewels)
+        const cols = elimJewels.map(j => j.column),
+            rows = elimJewels.map(j => j.row),
+            colRange = [Math.min(...cols), Math.max(...cols)],
+            rowRange = [Math.min(...rows), Math.max(...rows)];
+        let center, dist, direct;
+        let centerRow, centerCol;
+
+        const animateElimJewels = elimJewels.map(ej => {
+            //console.log((ej.row))
+
+            if (Math.abs(colRange[0] - colRange[1]) > 0) {
+                //movement on cols
+                //calc distance from center
+                center = ((colRange[1] > colRange[0]) ? colRange[0] : colRange[1]) + (Math.abs(colRange[1] - colRange[0]) / 2)
+                centerCol = center;
+                centerRow = ej.row;
+                dist = center - ej.column;
+                direct = dist > 0 ? "west" : "east";
+            }
+            else {
+                //movement on row;
+                center = ((rowRange[1] > rowRange[0]) ? rowRange[0] : rowRange[1]) + (Math.abs(rowRange[1] - rowRange[0]) / 2)
+                dist = center - ej.row;
+                direct = dist > 0 ? "north" : "south";
+                centerCol = ej.column;
+                centerRow = center;
+            }
+
+            return { ...ej, row: centerRow, column: centerCol, highLighted: true, animate: { direction: direct, magnitude: Math.abs(dist) } }
+        })
+
+        const normal = normalJewels.map(j => { return { ...j, animate: { direction: "static" } } })
+        this.setState({ jewelData: [...animateElimJewels, ...normal] }, ()=>{onNext({active: animateElimJewels, normal} )} );
+
+    }
+
 
 
 
@@ -338,7 +322,7 @@ class App extends React.Component {
 
         this.setState({ "jewelData": tempJewelData, selectedJewel }, () => { this.checkForSequences([currJewel, lastJewel], onReject) })
     */
-        
+
         this.setState({ "jewelData": tempJewelData, selectedJewel }, () => { this.checkForSequences() })
 
     }
