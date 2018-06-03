@@ -55,31 +55,21 @@ class App extends React.Component {
 
     }
 
+    
 
     keepReplacingSequence = (elimJewels = []) => {
         setTimeout(() => {
             let seqs = this.checkForSequences();
-            
             if (seqs) {
                 this.animateCollapse(seqs, (jewelOb) => {
-                    // const c = range(0, Math.max(...this.state.jewelData.map(j => j.column))) //this.state.jewelData.reduce((acc,curr)=>{}, [])
-                    // console.log(
-                    //     c.map((v, i) => {
-                    //         return this.state.jewelData.filter(j => j.column === v).length
-                    //     }))
-
-                    console.log("collapse complete - ", jewelOb.active)
-
-                    
                     setTimeout(()=>{this.animateRemoval(jewelOb, (j)=>{
+                        setTimeout(()=>{
+                            this.actuallyRemove(jewelOb, ()=>{
+                                this.keepReplacingSequence();
+                            })
+                        },500)
                         
-                        console.log("removal complete ", j.active, this.state.jewelData);
-                        this.keepReplacingSequence();
                     })}, 225);
-                    
-                    
-                    //
-
                 });
             }
         }, 1000)
@@ -200,6 +190,19 @@ class App extends React.Component {
         this.setState({ jewelData: [...active,  ...normal] }, ()=>{onNext({active, normal})} );
     }
 
+    actuallyRemove(jewelOb, onNext){
+        //const active = jewelOb.active.map(j=>{return {...j, animate: {direction: "shrink"}}});
+        const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+
+        this.setState({ jewelData: [...normal] }, ()=>{onNext({normal})} );
+    }
+
+    removeDuplicates(jewelOb, onNext){
+        const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+
+
+        this.setState({ jewelData: [jewelOb.active[0], ...normal] }, ()=>{onNext({active: jewelOb.active[0], normal})} );
+    }
 
 
 
