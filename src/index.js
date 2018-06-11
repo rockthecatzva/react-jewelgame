@@ -11,7 +11,7 @@ import './style.css';
 
 
 class App extends React.Component {
-    state = { "selectedJewel": [], "animatingJewels": [], "jewelData": [] };
+    state = { selectedJewel: [], animatingJewels: [], jewelData: [] };
 
     _isAdjacent = (pos1, pos2) => (Math.abs(pos1[0] - pos2[0]) + Math.abs(pos1[1] - pos2[1])) === 1;
     _basicJewelTypes = [0, 1, 2, 3]//[0, 1, 2, 3, 4, 5, 6];
@@ -35,14 +35,14 @@ class App extends React.Component {
         for (var a = 0; a < _numCols; a++) {
             for (var b = 0; b < _numRows; b++) {
                 tempJewel = {
-                    "jewelType": _basicJewelTypes[Math.floor(Math.random() * _basicJewelTypes.length)],
-                    "row": b,
-                    "column": a,
-                    "onJewelClick": this.onJewelClick,
-                    "width": this._jewelWidth,
-                    "height": this._jewelHeight,
-                    "animate": { direction: "static", magnitude: 0 },
-                    "isSelected": false,
+                    jewelType: _basicJewelTypes[Math.floor(Math.random() * _basicJewelTypes.length)],
+                    row: b,
+                    column: a,
+                    onJewelClick: this.onJewelClick,
+                    width: this._jewelWidth,
+                    height: this._jewelHeight,
+                    animate: { direction: "static", magnitude: 0 },
+                    isSelected: false,
                     highLighted: false
                 }
 
@@ -51,28 +51,68 @@ class App extends React.Component {
             }
         }
 
-        this.setState({ "jewelData": tempSet, "selectedJewel": [] }, () => { this.keepReplacingSequence() })
+        this.setState({ jewelData: tempSet, selectedJewel: [] }, () => { this.keepReplacingSequence() })
 
     }
 
-    
+
+
+
 
     keepReplacingSequence = (elimJewels = []) => {
+        /*
+        const p = (data, delay) => new Promise((res, rej)=>{
+            setTimeout(()=>{res(data)}, delay)
+        });
+
+    
+        p(this.checkForSequences(), 1000)
+        .then((d)=>p(this.animateCollapse(d, this.resolve), 500));
+        */
+
+        const delayCaller = (delay) => {
+            return new Promise((resolve, reject) => {
+                setTimeout(resolve, delay)
+            })
+        }
+
+        delayCaller(100).then(() => {
+            let seqs = this.checkForSequences();
+            if (seqs) {
+                this.animateCollapse(seqs, (jewelOb) => {
+                    delayCaller(225).then(() => {
+                        this.animateRemoval(jewelOb, (j) => {
+                            delayCaller(500).then(() => {
+                                this.actuallyRemove(jewelOb, () => {
+                                    this.keepReplacingSequence();
+                                })
+                            })
+                        })
+                    })
+                });
+            }
+        })
+
+
+
+        /*
         setTimeout(() => {
             let seqs = this.checkForSequences();
             if (seqs) {
                 this.animateCollapse(seqs, (jewelOb) => {
-                    setTimeout(()=>{this.animateRemoval(jewelOb, (j)=>{
-                        setTimeout(()=>{
-                            this.actuallyRemove(jewelOb, ()=>{
-                                this.keepReplacingSequence();
-                            })
-                        },500)
-                        
-                    })}, 225);
+                    setTimeout(() => {
+                        this.animateRemoval(jewelOb, (j) => {
+                            setTimeout(() => {
+                                this.actuallyRemove(jewelOb, () => {
+                                    this.keepReplacingSequence();
+                                })
+                            }, 500)
+
+                        })
+                    }, 225);
                 });
             }
-        }, 1000)
+        }, 100)*/
 
     }
 
@@ -149,12 +189,12 @@ class App extends React.Component {
         //mutating.....!
         seqPoints = seqPoints.sort((a, b) => b.count - a.count);
         //return seqPoints.sort((a, b) => b.count - a.count);
-        
+
 
         if (seqPoints.length) {
             //need ramda for these fills...
 
-            console.log(seqPoints[0])
+            //console.log(seqPoints[0])
 
             let elimJewels, normalJewels;
             if (seqPoints[0].direction === "rows") {
@@ -175,7 +215,7 @@ class App extends React.Component {
                 normalJewels = this.state.jewelData.filter(j => j.column !== seqPoints[0].column || j.row >= (seqPoints[0].row + seqPoints[0].count) || j.row < seqPoints[0].row);//flip who has the =
             }
 
-            return {active: elimJewels, normal: normalJewels}
+            return { active: elimJewels, normal: normalJewels }
         }
 
         return undefined;
@@ -183,35 +223,35 @@ class App extends React.Component {
     }
 
 
-    animateRemoval(jewelOb, onNext){
-        const active = jewelOb.active.map(j=>{return {...j, animate: {direction: "shrink"}}});
+    animateRemoval(jewelOb, onNext) {
+        const active = jewelOb.active.map(j => { return { ...j, animate: { direction: "shrink" } } });
         const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
 
-        this.setState({ jewelData: [...active,  ...normal] }, ()=>{onNext({active, normal})} );
+        this.setState({ jewelData: [...active, ...normal] }, () => { onNext({ active, normal }) });
     }
 
-    actuallyRemove(jewelOb, onNext){
+    actuallyRemove(jewelOb, onNext) {
         //const active = jewelOb.active.map(j=>{return {...j, animate: {direction: "shrink"}}});
         const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
 
-        this.setState({ jewelData: [...normal] }, ()=>{onNext({normal})} );
+        this.setState({ jewelData: [...normal] }, () => { onNext({ normal }) });
     }
 
-    removeDuplicates(jewelOb, onNext){
+    removeDuplicates(jewelOb, onNext) {
         const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
 
 
-        this.setState({ jewelData: [jewelOb.active[0], ...normal] }, ()=>{onNext({active: jewelOb.active[0], normal})} );
+        this.setState({ jewelData: [jewelOb.active[0], ...normal] }, () => { onNext({ active: [...jewelOb.active[0]], normal }) });
     }
 
 
 
     animateCollapse(jewelOb, onNext) {
-        
+
         let elimJewels = jewelOb.active,
             normalJewels = jewelOb.normal;
 
-        console.log(elimJewels, normalJewels)
+        //console.log(elimJewels, normalJewels)
         const cols = elimJewels.map(j => j.column),
             rows = elimJewels.map(j => j.row),
             colRange = [Math.min(...cols), Math.max(...cols)],
@@ -244,7 +284,7 @@ class App extends React.Component {
         })
 
         const normal = normalJewels.map(j => { return { ...j, animate: { direction: "static" } } })
-        this.setState({ jewelData: [...animateElimJewels, ...normal] }, ()=>{onNext({active: animateElimJewels, normal} )} );
+        this.setState({ jewelData: [...animateElimJewels, ...normal] }, () => { onNext({ active: animateElimJewels, normal }) });
 
     }
 
