@@ -67,26 +67,27 @@ export default class Jewel extends Component {
         let startR = row, startC = column;
         let easeInCubic = " cubic-bezier(0.550, 0.055, 0.675, 0.190)"
 
-        const { _animDuration } = this;
+        const { duration } = this.props.animate;
+
 
         switch (animate.direction) {
             case "shrink":
-                animation = shrink + " " + _animDuration + " linear";
+                animation = shrink + " " + duration + " linear";
                 break;
             case "north":
-                animation = north + " " + _animDuration + easeInCubic;
+                animation = north + " " + duration + easeInCubic;
                 startR += animate.magnitude;
                 break;
             case "south":
-                animation = south + " " + _animDuration + easeInCubic;
+                animation = south + " " + duration + easeInCubic;
                 startR -= animate.magnitude;
                 break;
             case "east":
-                animation = east + " " + _animDuration + easeInCubic;
+                animation = east + " " + duration + easeInCubic;
                 startC += animate.magnitude;
                 break;
             case "west":
-                animation = west + " " + _animDuration + easeInCubic;
+                animation = west + " " + duration + easeInCubic;
                 startC -= animate.magnitude;
                 break;
             default:

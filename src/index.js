@@ -41,7 +41,7 @@ class App extends React.Component {
                     onJewelClick: this.onJewelClick,
                     width: this._jewelWidth,
                     height: this._jewelHeight,
-                    animate: { direction: "static", magnitude: 0 },
+                    animate: { direction: "static", magnitude: 0, duration: "" },
                     isSelected: false,
                     highLighted: false
                 }
@@ -81,11 +81,16 @@ class App extends React.Component {
             let seqs = this.checkForSequences();
             if (seqs) {
                 this.animateCollapse(seqs)
-                    .then((d) => delayCaller(250, d))
-                    .then((d) => this.animateRemoval(d))//does it need d?
-                    .then((d) => delayCaller(500, d))
-                    .then((d) => this.actuallyRemove(d))//does it need d?
+                    .then((d) => delayCaller(200, d))
+                    .then((d)=> this.removeDuplicates(d))
+                    .then((d) => this.animateRemoval(d))//does it need d?     
+                    .then((d) => delayCaller(200, d))
+                    .then((d) => this.removeShrunks(d))//does it need d?
+                    //MUST HAVE delay before gravity - otherwise shrink animation gets overidden
                     .then((d) => this.applyGravity(d))//does it need d?
+                    //.then((d) => delayCaller(400, d))
+                    //.then(()=> {this.keepReplacingSequence()})
+                    
             }
         })
     }
@@ -199,17 +204,18 @@ class App extends React.Component {
 
     animateRemoval(jewelOb, onNext) {
         return new Promise((resolve, reject) => {
-            const active = jewelOb.active.map(j => { return { ...j, animate: { direction: "shrink" } } });
+            const active = jewelOb.active.map(j => { return { ...j, animate: { direction: "shrink", duration: "0.2s" } } });
             const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
-            console.log(this)
+            
             this.setState({ jewelData: [...active, ...normal] }, () => { resolve({ active, normal }) });
         })
 
     }
 
-    actuallyRemove(jewelOb, onNext) {
+    removeShrunks(jewelOb, onNext) {
         return new Promise((resolve, reject) => {
-            const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+            //const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+            const normal = this.state.jewelData.filter(j=>j.animate.direction!=="shrink")
 
             this.setState({ jewelData: [...normal] }, () => { resolve({ normal }) });
         })
@@ -217,9 +223,9 @@ class App extends React.Component {
 
     removeDuplicates(jewelOb, onNext) {
         return new Promise((resolve, reject) => {
-            const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+            const {active, normal} = jewelOb;
 
-            this.setState({ jewelData: [jewelOb.active[0], ...normal] }, () => { resolve({ active: [...jewelOb.active[0]], normal }) });
+            this.setState({ jewelData: [active[0], ...normal] }, () => { resolve({active: [active[0]], normal}) });
         })
 
     }
@@ -228,47 +234,67 @@ class App extends React.Component {
 
     applyGravity(jewelOb) {
         return new Promise((resolve, reject) => {
-            console.log("there shouldnt be any animated obs right now", jewelOb);
-            //find gaps in cols
-
             let gaps = [];
             for (let i = 0; i < this._numRows; i++) {
                 for (let e = 0; e < this._numCols; e++) {
-                    if (!jewelOb.normal.find(j => j.row === i && j.column === e)) {
+                    if (!this.state.jewelData.find(j => j.row === i && j.column === e && j.animate.direction!=="shrink")) {
                         gaps.push([i, e]);
                     }
                 }
             };
 
 
-            console.log(gaps)
+            let normal = [],
+                active = [];
 
-            const jewels = [];
+
+            this.state.jewelData.forEach(j=>{
+                let g = gaps.filter(g => g[1] === j.column && g[0] >= j.row && j.animate.direction==="static");//find gaps in my column
+                if(g){
+                    const minDur = 0.4,
+                        d = g.length * .12,
+                        duration = (d > minDur ? d : minDur) + "s";
+
+                    normal.push({ ...j, row: j.row + g.length, animate: { direction: "south", magnitude: g.length, duration } })
+                }
+                else if(j.animate.direction==="static"){
+                    normal.push(j)
+                }
+                else {
+                    active.push(j);
+                }
+            })
+
+            /*
             for (let e = 0; e < this._numCols; e++) {
                 let gapCt = 0
                 for (let i = 0; i < this._numRows; i++) {
                     let j = this.state.jewelData.find(j => j.row === i && j.column === e);
-                    let g = gaps.filter(g => g[1] === e && g[0] >= i)
+                    let g = gaps.filter(g => g[1] === e && g[0] >= i);
+                    const minDur = 0.4,
+                        d = g.length * .12,
+                        duration = (d > minDur ? d : minDur) + "s";
+
+                    if (j) {
+                        console.log(j.row, j.column, j.animate)
+                    }
 
                     if (j && g.length) {
-                        //gapCt += g.length
-
-                        jewels.push({ ...j, row: j.row + g.length, animate: { direction: "south", magnitude: g.length } })
+                        if (j.animate.direction === "static") {
+                            console.log(duration, g.length, (g.length * .12) | 0.3)
+                            normal.push({ ...j, row: j.row + g.length, animate: { direction: "south", magnitude: g.length, duration } })
+                        }
+                        else{
+                            active.push(j)
+                        }
                     }
-                    else if (j){
-                        jewels.push(j)
+                    else if (j) {
+                        normal.push(j)
                     }
-
-
                 }
-            }
+            }*/
 
-
-            console.log(jewels);
-            this.setState({ jewelData: jewels }, () => { resolve() });
-
-
-
+            this.setState({ jewelData: [...normal, ...active] }, () => { resolve({normal, active}) });
         })
     }
 
@@ -310,7 +336,7 @@ class App extends React.Component {
                     centerRow = center;
                 }
 
-                return { ...ej, row: centerRow, column: centerCol, highLighted: true, animate: { direction: direct, magnitude: Math.abs(dist) } }
+                return { ...ej, row: centerRow, column: centerCol, highLighted: true, animate: { direction: direct, magnitude: Math.abs(dist), duration: "0.3s" } }
             })
 
             const normal = normalJewels.map(j => { return { ...j, animate: { direction: "static" } } })
@@ -351,12 +377,12 @@ class App extends React.Component {
 
                     const lastJewel = {
                         ...tempJewelData.find((j => (j.row === this.state.selectedJewel[0] && j.column === this.state.selectedJewel[1]))),
-                        animate: { direction: animationDirects[1], magnitude: 1 },
+                        animate: { direction: animationDirects[1], magnitude: 1, duration: "0.1s" },
                         isSelected: false
                     }
                     const currJewel = {
                         ...tempJewelData.find(j => (j.row === row && j.column === col)),
-                        animate: { direction: animationDirects[0], magnitude: 1 },
+                        animate: { direction: animationDirects[0], magnitude: 1, duration: "0.1s" },
                         isSelected: false
                     };
 
