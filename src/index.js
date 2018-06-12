@@ -70,50 +70,24 @@ class App extends React.Component {
         .then((d)=>p(this.animateCollapse(d, this.resolve), 500));
         */
 
-        const delayCaller = (delay) => {
+        const delayCaller = (delay, data) => {
             return new Promise((resolve, reject) => {
-                setTimeout(resolve, delay)
+                setTimeout(() => resolve(data), delay)
             })
         }
+
 
         delayCaller(100).then(() => {
             let seqs = this.checkForSequences();
             if (seqs) {
-                this.animateCollapse(seqs, (jewelOb) => {
-                    delayCaller(225).then(() => {
-                        this.animateRemoval(jewelOb, (j) => {
-                            delayCaller(500).then(() => {
-                                this.actuallyRemove(jewelOb, () => {
-                                    this.keepReplacingSequence();
-                                })
-                            })
-                        })
-                    })
-                });
+                this.animateCollapse(seqs)
+                    .then((d) => delayCaller(250, d))
+                    .then((d) => this.animateRemoval(d))//does it need d?
+                    .then((d) => delayCaller(500, d))
+                    .then((d) => this.actuallyRemove(d))//does it need d?
+                    .then((d) => this.applyGravity(d))//does it need d?
             }
         })
-
-
-
-        /*
-        setTimeout(() => {
-            let seqs = this.checkForSequences();
-            if (seqs) {
-                this.animateCollapse(seqs, (jewelOb) => {
-                    setTimeout(() => {
-                        this.animateRemoval(jewelOb, (j) => {
-                            setTimeout(() => {
-                                this.actuallyRemove(jewelOb, () => {
-                                    this.keepReplacingSequence();
-                                })
-                            }, 500)
-
-                        })
-                    }, 225);
-                });
-            }
-        }, 100)*/
-
     }
 
     checkForSequences = () => {
@@ -224,67 +198,126 @@ class App extends React.Component {
 
 
     animateRemoval(jewelOb, onNext) {
-        const active = jewelOb.active.map(j => { return { ...j, animate: { direction: "shrink" } } });
-        const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+        return new Promise((resolve, reject) => {
+            const active = jewelOb.active.map(j => { return { ...j, animate: { direction: "shrink" } } });
+            const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+            console.log(this)
+            this.setState({ jewelData: [...active, ...normal] }, () => { resolve({ active, normal }) });
+        })
 
-        this.setState({ jewelData: [...active, ...normal] }, () => { onNext({ active, normal }) });
     }
 
     actuallyRemove(jewelOb, onNext) {
-        //const active = jewelOb.active.map(j=>{return {...j, animate: {direction: "shrink"}}});
-        const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+        return new Promise((resolve, reject) => {
+            const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
 
-        this.setState({ jewelData: [...normal] }, () => { onNext({ normal }) });
+            this.setState({ jewelData: [...normal] }, () => { resolve({ normal }) });
+        })
     }
 
     removeDuplicates(jewelOb, onNext) {
-        const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+        return new Promise((resolve, reject) => {
+            const normal = jewelOb.normal.map(j => { return { ...j, animate: { direction: "static" } } })
+
+            this.setState({ jewelData: [jewelOb.active[0], ...normal] }, () => { resolve({ active: [...jewelOb.active[0]], normal }) });
+        })
+
+    }
+
+    //WHY ARE YOU PASSING ALONG jewelOb if its just the same as state!
+
+    applyGravity(jewelOb) {
+        return new Promise((resolve, reject) => {
+            console.log("there shouldnt be any animated obs right now", jewelOb);
+            //find gaps in cols
+
+            let gaps = [];
+            for (let i = 0; i < this._numRows; i++) {
+                for (let e = 0; e < this._numCols; e++) {
+                    if (!jewelOb.normal.find(j => j.row === i && j.column === e)) {
+                        gaps.push([i, e]);
+                    }
+                }
+            };
 
 
-        this.setState({ jewelData: [jewelOb.active[0], ...normal] }, () => { onNext({ active: [...jewelOb.active[0]], normal }) });
+            console.log(gaps)
+
+            const jewels = [];
+            for (let e = 0; e < this._numCols; e++) {
+                let gapCt = 0
+                for (let i = 0; i < this._numRows; i++) {
+                    let j = this.state.jewelData.find(j => j.row === i && j.column === e);
+                    let g = gaps.filter(g => g[1] === e && g[0] >= i)
+
+                    if (j && g.length) {
+                        //gapCt += g.length
+
+                        jewels.push({ ...j, row: j.row + g.length, animate: { direction: "south", magnitude: g.length } })
+                    }
+                    else if (j){
+                        jewels.push(j)
+                    }
+
+
+                }
+            }
+
+
+            console.log(jewels);
+            this.setState({ jewelData: jewels }, () => { resolve() });
+
+
+
+        })
     }
 
 
 
     animateCollapse(jewelOb, onNext) {
 
-        let elimJewels = jewelOb.active,
-            normalJewels = jewelOb.normal;
+        return new Promise((resolve, reject) => {
 
-        //console.log(elimJewels, normalJewels)
-        const cols = elimJewels.map(j => j.column),
-            rows = elimJewels.map(j => j.row),
-            colRange = [Math.min(...cols), Math.max(...cols)],
-            rowRange = [Math.min(...rows), Math.max(...rows)];
-        let center, dist, direct;
-        let centerRow, centerCol;
+            let elimJewels = jewelOb.active,
+                normalJewels = jewelOb.normal;
 
-        const animateElimJewels = elimJewels.map(ej => {
-            //console.log((ej.row))
+            //console.log(elimJewels, normalJewels)
+            const cols = elimJewels.map(j => j.column),
+                rows = elimJewels.map(j => j.row),
+                colRange = [Math.min(...cols), Math.max(...cols)],
+                rowRange = [Math.min(...rows), Math.max(...rows)];
+            let center, dist, direct;
+            let centerRow, centerCol;
 
-            if (Math.abs(colRange[0] - colRange[1]) > 0) {
-                //movement on cols
-                //calc distance from center
-                center = ((colRange[1] > colRange[0]) ? colRange[0] : colRange[1]) + (Math.abs(colRange[1] - colRange[0]) / 2)
-                centerCol = center;
-                centerRow = ej.row;
-                dist = center - ej.column;
-                direct = dist > 0 ? "west" : "east";
-            }
-            else {
-                //movement on row;
-                center = ((rowRange[1] > rowRange[0]) ? rowRange[0] : rowRange[1]) + (Math.abs(rowRange[1] - rowRange[0]) / 2)
-                dist = center - ej.row;
-                direct = dist > 0 ? "north" : "south";
-                centerCol = ej.column;
-                centerRow = center;
-            }
+            const animateElimJewels = elimJewels.map(ej => {
+                //console.log((ej.row))
 
-            return { ...ej, row: centerRow, column: centerCol, highLighted: true, animate: { direction: direct, magnitude: Math.abs(dist) } }
-        })
+                if (Math.abs(colRange[0] - colRange[1]) > 0) {
+                    //movement on cols
+                    //calc distance from center
+                    center = ((colRange[1] > colRange[0]) ? colRange[0] : colRange[1]) + (Math.abs(colRange[1] - colRange[0]) / 2)
+                    centerCol = center;
+                    centerRow = ej.row;
+                    dist = center - ej.column;
+                    direct = dist > 0 ? "west" : "east";
+                }
+                else {
+                    //movement on row;
+                    center = ((rowRange[1] > rowRange[0]) ? rowRange[0] : rowRange[1]) + (Math.abs(rowRange[1] - rowRange[0]) / 2)
+                    dist = center - ej.row;
+                    direct = dist > 0 ? "north" : "south";
+                    centerCol = ej.column;
+                    centerRow = center;
+                }
 
-        const normal = normalJewels.map(j => { return { ...j, animate: { direction: "static" } } })
-        this.setState({ jewelData: [...animateElimJewels, ...normal] }, () => { onNext({ active: animateElimJewels, normal }) });
+                return { ...ej, row: centerRow, column: centerCol, highLighted: true, animate: { direction: direct, magnitude: Math.abs(dist) } }
+            })
+
+            const normal = normalJewels.map(j => { return { ...j, animate: { direction: "static" } } })
+            this.setState({ jewelData: [...animateElimJewels, ...normal] }, () => { resolve({ active: animateElimJewels, normal }) });
+
+
+        });
 
     }
 
@@ -356,13 +389,13 @@ class App extends React.Component {
             //flip it back!
             currJewel = { ...currJewel, animate: animationDirects[1], row: row, column: col }
             lastJewel = { ...lastJewel, animate: animationDirects[0], row: lastJewel.row, column: lastJewel.column }
-
+    
             tempJewelData = [...tempJewelData.filter(j => (j.row !== row || j.column !== col) && (j.row !== lastJewel.row || j.column !== lastJewel.column)),
                 currJewel,
                 lastJewel];
                 this.setState({ "jewelData": tempJewelData, selectedJewel }, () => { this.checkForSequences() })        
         }
-
+    
         this.setState({ "jewelData": tempJewelData, selectedJewel }, () => { this.checkForSequences([currJewel, lastJewel], onReject) })
     */
 

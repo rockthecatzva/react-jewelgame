@@ -65,27 +65,28 @@ export default class Jewel extends Component {
 
         let animation = "";
         let startR = row, startC = column;
+        let easeInCubic = " cubic-bezier(0.550, 0.055, 0.675, 0.190)"
 
         const { _animDuration } = this;
 
         switch (animate.direction) {
             case "shrink":
-                animation = shrink + " " + _animDuration + " linear"
+                animation = shrink + " " + _animDuration + " linear";
                 break;
             case "north":
-                animation = north + " " + _animDuration + " linear";
+                animation = north + " " + _animDuration + easeInCubic;
                 startR += animate.magnitude;
                 break;
             case "south":
-                animation = south + " " + _animDuration + " linear";
+                animation = south + " " + _animDuration + easeInCubic;
                 startR -= animate.magnitude;
                 break;
             case "east":
-                animation = east + " " + _animDuration + " linear";
+                animation = east + " " + _animDuration + easeInCubic;
                 startC += animate.magnitude;
                 break;
             case "west":
-                animation = west + " " + _animDuration + " linear";
+                animation = west + " " + _animDuration + easeInCubic;
                 startC -= animate.magnitude;
                 break;
             default:
@@ -107,6 +108,7 @@ export default class Jewel extends Component {
             border: ${border};
             animation: ${animation};
             animation-fill-mode: forwards;
+
             `;
 
         const JewelImage = styled.img`
@@ -114,7 +116,7 @@ export default class Jewel extends Component {
             `;
 
         if (animate.direction === "shrink") {
-            console.log("SHRINKING ", row, column, startR, startC, animation, west, shrink )
+            console.log("SHRINKING ", row, column, startR, startC, animation, west, shrink)
         }
 
         return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}><img className="jewel-image" src={"images/png/" + bg} /></JewelDiv>)
