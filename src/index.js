@@ -18,30 +18,28 @@ class App extends React.Component {
     _numCols = 8;
     _numRows = 8;
 
+    
     _jewelWidth = 50;//(1 / _numCols) * _gameDivWidth,
     _jewelHeight = 50;//(1 / _numRows) * _gameDivHeight;
     _gameDivWidth = this._jewelWidth * this._numCols;
     _gameDivHeight = this._jewelHeight * this._numRows;
 
-
     initGame = () => {
-        console.log("starting the game");
         const { _numCols, _numRows, _basicJewelTypes } = this;
-
         let tempSet = [],
             tempJewel;
 
-
         for (var a = 0; a < _numCols; a++) {
             for (var b = 0; b < _numRows; b++) {
+                const duration =  (_numRows * 0.075) + "s";
                 tempJewel = {
                     jewelType: _basicJewelTypes[Math.floor(Math.random() * _basicJewelTypes.length)],
                     row: b,
                     column: a,
                     onJewelClick: this.onJewelClick,
-                    width: this._jewelWidth,
-                    height: this._jewelHeight,
-                    animate: { direction: "static", magnitude: 0, duration: "" },
+                    width: document.getElementsByClassName("game-surface")[0].clientWidth / this._numCols,
+                    height: document.getElementsByClassName("game-surface")[0].clientHeight / this._numRows,
+                    animate: { direction: "south", magnitude:  _numRows, duration },
                     isSelected: false,
                     highLighted: false
                 }
@@ -77,7 +75,7 @@ class App extends React.Component {
         }
 
 
-        delayCaller(100).then(() => {
+        delayCaller(700).then(() => {
             let seqs = this.checkForSequences();
             if (seqs) {
                 this.animateCollapse(seqs)
@@ -443,12 +441,12 @@ class App extends React.Component {
 
 
 
-            {this.state.jewelData.length > 0 &&
+            
 
                 <div className="game-surface">
                     {jewels}
 
-                </div>}
+                </div>
 
         </div >);
     }
