@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "http://rockthecatzva.com/jewel/",
   "dependencies": {
+    "deep-equal": "^1.0.1",
     "prettier": "^1.13.5",
     "ramda": "^0.25.0",
     "react": "^16.0.0",

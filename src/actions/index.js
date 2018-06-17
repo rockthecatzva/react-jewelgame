@@ -1,4 +1,4 @@
-import { _basicJewelTypes, _numCols, _numRows } from '../constants'
+import { _basicJewelTypes, _numCols, _numRows,  } from '../constants'
 
 export const JEWEL_CLICK = "JEWEL_CLICK";
 export const SEQUENCE_FOUND = "SEQUENCE_FOUND";
@@ -10,177 +10,101 @@ export const REPLACE_MISSING = "REPLACE_MISSING";
 export const JEWELS_CREATED = "JEWELS_CREATED";
 export const INTRO_COMPLETE = "INTRO_COMPLETE";
 export const NO_SEQUENCES_FOUND = "NO_SEQUENCES_FOUND";
+export const CHECK_FOR_SEQUENCES = "CHECK_FOR_SEQUENCES";
+export const COLLAPSE_SEQUENCE = "COLLAPSE_SEQUENCE";
+export const SEQUENCES_HIGHLIGHTED = "SEQUENCES_HIGHLIGHTED";
+export const REMOVE_EXITERS = "REMOVE_EXITERS";
+export const COLLAPSE_COMPLETE = "COLLAPSE_COMPLETE";
+export const SELECT_JEWEL = "SELECT_JEWEL";
+export const SWAP_JEWELS = "SWAP_JEWELS";
+export const COMPLETE_SWAP = "COMPLETE_SWAP";
 
 
-export const onJewelClick = (row, column, nextPhase) => {
+export const onJewelClick = (row, column) => {
     return {
         type: JEWEL_CLICK,
-        jewel: [row, column],
-        nextPhase
+        jewel: [row, column]
     }
 }
 
-export const onJewelsCreated = (jewels, nextPhase) => {
+export const onJewelsCreated = (jewels) => {
     return {
         type: JEWELS_CREATED,
-        jewels,
-        nextPhase
+        jewels
     }
 }
 
-export const onIntroComplete = (nextPhase) => {
+export const onIntroComplete = () => {
     return {
-        type: INTRO_COMPLETE,
-        nextPhase
+        type: INTRO_COMPLETE
     }
 }
 
 
 
-export const onCheckForSequences = (jewels, nextPhase) => {
-    console.log("checking")
-    let seqCt = 0;
-
-    const jewelTypeMatrix = new Array(_numRows).fill(null).map((r, i) => {
-        return new Array(_numCols).fill(null).map((c, e) => {
-            return jewels
-                .filter(j => {
-                    return j.row === i && j.column === e;
-                })
-                .reduce((acc, curr) => curr.jewelType, null);
-        });
-    });
-
-    const matrixByTypeRow = _basicJewelTypes.map(jtype => {
-        return jewelTypeMatrix.map(r => {
-            return r
-                .map(c => {
-                    return c === jtype ? 1 : 0;
-                })
-                .reduce((acc, curr) => {
-                    return acc + curr.toString();
-                });
-        });
-    });
-
-    const matrixByTypeCol = _basicJewelTypes.map(jtype => {
-        return new Array(_numCols).fill(null).map((c, ci) => {
-            return new Array(_numRows)
-                .fill(null)
-                .map((r, ri) => {
-                    //console.log(ci, ri)
-                    return jewels
-                        .filter(j => j.row === ri && j.column === ci)
-                        .reduce((acc, curr) => curr.jewelType, null) === jtype
-                        ? 1
-                        : 0;
-                })
-                .reduce((acc, curr) => {
-                    return acc + curr.toString();
-                });
-        });
-    });
-
-    const matrixToObject = (
-        jewelStringCts,
-        direction,
-        rowname = "row",
-        colname = "column"
-    ) => {
-        //a function that gets a binary-string representing a row or col of a
-        //jewel-type - indicating where its members are located
-        //returns info on which binary-strings contain patterns
-        let found = [];
-        jewelStringCts.forEach((r, ri) => {
-            const segs = r.split("0").map(str => str.length);
-            if (segs.filter(rstr => rstr >= 3).length > 0) {
-                segs.forEach((s, ci) => {
-                    if (s >= 3) {
-                        found.push({
-                            [rowname]: ri,
-                            [colname]: r.indexOf("111"),
-                            count: s,
-                            direction
-                        });
-                    }
-                });
-            }
-        });
-
-        //found is raw r,c,span ob
-        return found;
-    };
-
-    let seqPoints = [];
-
-    matrixByTypeCol.map(jtype => {
-        const t = matrixToObject(jtype, "columns", "column", "row");
-        seqPoints = [...seqPoints, ...t];
-    });
-
-    matrixByTypeRow.map(jtype => {
-        const t = matrixToObject(jtype, "rows");
-        seqPoints = [...seqPoints, ...t];
-    });
-
-    //mutating.....!
-    seqPoints = seqPoints.sort((a, b) => b.count - a.count);
-    //return seqPoints.sort((a, b) => b.count - a.count);
-
-    if (seqPoints.length) {
-        //need ramda for these fills...
-
-        //console.log(seqPoints[0])
-
-        let elimJewels, normalJewels;
-        if (seqPoints[0].direction === "rows") {
-            //console.log(this.state.jewels)
-            elimJewels = jewels.filter(j => {
-                //console.log(j.row, j.column, seqPoints[0])
-                return (
-                    j.row === seqPoints[0].row &&
-                    j.column < seqPoints[0].column + seqPoints[0].count &&
-                    j.column >= seqPoints[0].column
-                );
-            });
-
-            normalJewels = jewels.filter(j => {
-                //console.log(j.row, j.column, seqPoints[0])
-                return (
-                    j.row !== seqPoints[0].row ||
-                    j.column >= seqPoints[0].column + seqPoints[0].count ||
-                    j.column < seqPoints[0].column
-                ); //flip who has the =
-            });
-        } else {
-            //columns-oriented direction
-            elimJewels = jewels.filter(
-                j =>
-                    j.column === seqPoints[0].column &&
-                    j.row < seqPoints[0].row + seqPoints[0].count &&
-                    j.row >= seqPoints[0].row
-            );
-            normalJewels = jewels.filter(
-                j =>
-                    j.column !== seqPoints[0].column ||
-                    j.row >= seqPoints[0].row + seqPoints[0].count ||
-                    j.row < seqPoints[0].row
-            ); //flip who has the =
-        }
-
-        //return { active: elimJewels, normal: normalJewels };
-        return {
-            type: SEQUENCE_FOUND,
-            sequences: elimJewels,
-            nextPhase
-        }
-    }
-
-    //return undefined;
+export const onCheckForSequences = () => {
     return {
-        type: NO_SEQUENCES_FOUND,
-        nextPhase
+        type: CHECK_FOR_SEQUENCES
+    }
+}
+
+export const onSequenceFound = ()=>{
+    return {
+        type: SEQUENCE_FOUND
     }
 }
 
 
+
+export const onCollapse = ()=>{
+    return {
+        type: COLLAPSE_COMPLETE
+    }
+}
+
+
+export const onAnimateExit = ()=>{
+    return {
+        type: EXIT_ANIMATION
+    }
+}
+
+export const onApplyGravity = ()=>{
+    return {
+        type: APPLY_GRAVITY
+    }
+}
+
+export const onRemoveExiters = () =>{
+    return {
+        type: REMOVE_EXITED
+    }
+}
+
+export const onReplaceMissing = (onClickHandler) =>{
+    return {
+        type: REPLACE_MISSING,
+        onClickHandler
+    }
+}
+
+export const onJewelSwap = (j1, j2) =>{
+    return {
+        type: SWAP_JEWELS,
+        jewels: [j1, j2]
+    }
+}
+
+export const onSelectJewel = (row, column)=>{
+    return {
+        type: SELECT_JEWEL,
+        row,
+        column
+    }
+}
+
+export const onCompleteSwappingJewels = ()=>{
+    return {
+        type: COMPLETE_SWAP
+    }
+}

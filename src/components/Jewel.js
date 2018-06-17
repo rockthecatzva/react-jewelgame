@@ -1,9 +1,24 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import styled, { keyframes } from 'styled-components';
+import deepEqual from 'deep-equal';
+
 
 export default class Jewel extends Component {
     _animDuration = ".40s";
+
+    componentDidUpdate(){
+        console.log("jewel updated")
+    }
+
+    shouldComponentUpdate(nextProps, nextState){
+        const {jewelType, row, column, isSelected, animate, highLighted} = this.props;
+
+        if(jewelType!==nextProps.jewelType || row!==nextProps.row || column!==nextProps.column || isSelected!==nextProps.isSelected || highLighted!==nextProps.highLighted || !deepEqual(animate, nextProps.animate)){
+            return true;
+        }
+        return false;
+    }
 
     render() {
         //const color = this.props.jewelType;
