@@ -58,7 +58,7 @@ export default class Jewel extends Component {
               }`,
             shrink = keyframes`
               to {
-                  transform: scale(0);
+                  transform: scale(0) rotate(180deg);
               }
             `;
 
