@@ -18,6 +18,10 @@ export const COLLAPSE_COMPLETE = "COLLAPSE_COMPLETE";
 export const SELECT_JEWEL = "SELECT_JEWEL";
 export const SWAP_JEWELS = "SWAP_JEWELS";
 export const COMPLETE_SWAP = "COMPLETE_SWAP";
+export const NEUTRAL = "NEUTRAL";
+export const INTRO_ANIMATION = "INTRO_ANIMATION";
+export const JEWEL_CLICK_IN = "JEWEL_CLICK_IN";
+export const HIGHLIGHT_SEQUENCES = "HIGHLIGHT_SEQUENCES";
 
 
 export const onJewelClick = (row, column) => {

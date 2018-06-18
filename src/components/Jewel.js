@@ -135,6 +135,8 @@ export default class Jewel extends Component {
             console.log("SHRINKING ", row, column, startR, startC, animation, west, shrink)
         }
 
+        console.log(this.props.onJewelClick)
+
         return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}><img className="jewel-image" src={"images/png/" + bg} /></JewelDiv>)
     }
 }
