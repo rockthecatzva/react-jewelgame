@@ -19,31 +19,31 @@
 }
 
 .jewel-pizza{
-    background-image: url('/images/png/001-pizza.png');
+    background-image: url('/images/svg/001-pizza.svg');
 }
 
 .jewel-beachball{
-    background-image: url('/images/png/002-beach-ball.png');
+    background-image: url('/images/svg/002-beach-ball.svg');
 }
 
 .jewel-star{
-    background-image: url('/images/png/003-star.png');
+    background-image: url('/images/svg/003-star.svg');
 }
 
 .jewel-gift{
-    background-image: url('/images/png/004-gift.png');
+    background-image: url('/images/svg/004-gift.svg');
 }
 
 .jewel-icecream{
-    background-image: url('/images/png/005-ice-cream.png');
+    background-image: url('/images/svg/005-ice-cream.svg');
 }
 
 
 .jewel-dog{
-    background-image: url('/images/png/006-dog.png');
+    background-image: url('/images/svg/006-dog.svg');
 }
 
 
 .jewel-cat{
-    background-image: url('/images/png/007-cat.png');
+    background-image: url('/images/svg/007-cat.svg');
 }

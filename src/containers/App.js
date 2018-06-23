@@ -99,7 +99,7 @@ jewelMaker = (r, c, duration) =>{
   };
 
   componentDidUpdate(prevProps, prevState) {
-    //console.log(this.props.appData.animationPhase)
+    console.log(this.props.appData.animationPhase)
     switch (this.props.appData.animationPhase) {
       case INTRO_ANIMATION:
         setTimeout(

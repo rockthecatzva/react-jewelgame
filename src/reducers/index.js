@@ -298,6 +298,7 @@ const _replaceMissingJewels = (jewels, jewelMaker) => {
     gaps = _findGaps(jewels);
 
   normal = jewels.map(j => {
+    console.log(">>>>>>>>>", j.animate.direction)
     return { ...j, animate: { direction: "static" } };
   });
   if (gaps.length) {

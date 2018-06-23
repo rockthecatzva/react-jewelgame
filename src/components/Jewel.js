@@ -15,8 +15,10 @@ export default class Jewel extends Component {
         const {jewelType, row, column, isSelected, animate, highLighted} = this.props;
 
         if(jewelType!==nextProps.jewelType || row!==nextProps.row || column!==nextProps.column || isSelected!==nextProps.isSelected || highLighted!==nextProps.highLighted || !deepEqual(animate, nextProps.animate)){
+            console.log("true")
             return true;
         }
+        console.log(false)
         return false;
     }
 
@@ -80,7 +82,7 @@ export default class Jewel extends Component {
 
         let animation = "";
         let startR = row, startC = column;
-        let easeInCubic = " cubic-bezier(0.550, 0.055, 0.675, 0.190)"
+        const easeInCubic = " cubic-bezier(0.550, 0.055, 0.675, 0.190)"
 
         const { duration } = this.props.animate;
 
