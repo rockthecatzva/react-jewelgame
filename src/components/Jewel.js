@@ -25,25 +25,25 @@ export default class Jewel extends Component {
         let bg = "";
         switch (this.props.jewelType) {
             case 0:
-                bg = "001-pizza.png";
+                bg = "pizza"//"001-pizza.png";
                 break;
             case 1:
-                bg = "002-beach-ball.png";
+                bg = "beachball"//"002-beach-ball.png";
                 break;
             case 2:
-                bg = "003-star.png";
+                bg = "star"//"003-star.png";
                 break;
             case 3:
-                bg = "004-gift.png";
+                bg = "gift"//"004-gift.png";
                 break;
             case 4:
-                bg = "005-ice-cream.png";
+                bg = "icecream"//"005-ice-cream.png";
                 break;
             case 5:
-                bg = "006-dog.png";
+                bg = "dog"//"006-dog.png";
                 break;
             case 6:
-                bg = "007-cat.png";
+                bg = "cat"// "007-cat.png";
                 break;
 
 
@@ -127,7 +127,7 @@ export default class Jewel extends Component {
             `;
 
 
-        return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}><img className="jewel-image" src={"images/png/" + bg} /></JewelDiv>)
+        return (<JewelDiv onClick={() => { this.props.onJewelClick(row, column) }}><div className={"jewel jewel-"+bg}></div></JewelDiv>)
     }
 }
 
