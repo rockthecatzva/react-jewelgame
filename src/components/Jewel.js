@@ -14,11 +14,9 @@ export default class Jewel extends Component {
     shouldComponentUpdate(nextProps, nextState){
         const {jewelType, row, column, isSelected, animate, highLighted} = this.props;
 
-        if(jewelType!==nextProps.jewelType || row!==nextProps.row || column!==nextProps.column || isSelected!==nextProps.isSelected || highLighted!==nextProps.highLighted || !deepEqual(animate, nextProps.animate)){
-            console.log("true")
+        if(jewelType!==nextProps.jewelType || row!==nextProps.row || column!==nextProps.column || isSelected!==nextProps.isSelected || highLighted!==nextProps.highLighted || !deepEqual(animate, nextProps.animate)){   
             return true;
         }
-        console.log(false)
         return false;
     }
 
@@ -55,6 +53,7 @@ export default class Jewel extends Component {
 
         const { width, height, row, column, isSelected, animate, highLighted } = this.props;
         const border = isSelected ? "solid 5px black" : "none 0px";
+        
         const shiftPercent = animate.magnitude * 100;
 
         const north = keyframes`

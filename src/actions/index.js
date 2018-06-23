@@ -48,10 +48,11 @@ export const onIntroComplete = (nextPhase) => {
 
 
 
-export const onCheckForSequences = (nextPhase) => {
+export const onCheckForSequences = (nextPhaseFound, nextPhaseNotfound) => {
     return {
         type: CHECK_FOR_SEQUENCES,
-        nextPhase
+        nextPhaseFound,
+        nextPhaseNotfound
     }
 }
 
@@ -79,10 +80,11 @@ export const onAnimateExit = (nextPhase)=>{
     }
 }
 
-export const onApplyGravity = (nextPhase)=>{
+export const onApplyGravity = (nextPhase, jewelMaker)=>{
     return {
         type: APPLY_GRAVITY,
-        nextPhase
+        nextPhase,
+        jewelMaker
     }
 }
 

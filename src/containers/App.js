@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { range, max } from "ramda";
 import Jewel from "../components/Jewel";
-import "../style.css";
+//import "../style.css";
 
 import {
   onJewelsCreated,
@@ -53,7 +53,7 @@ jewelMaker = (r, c, duration) =>{
         height:
           document.getElementsByClassName("game-surface")[0].clientHeight /
           _numRows,
-        animate: { direction: "south", magnitude: _numRows, duration },
+        animate: duration ? { direction: "south", magnitude: _numRows, duration } : {direction: "static"},
         isSelected: false,
         highLighted: false
       }
@@ -99,7 +99,7 @@ jewelMaker = (r, c, duration) =>{
   };
 
   componentDidUpdate(prevProps, prevState) {
-    console.log(this.props.appData.animationPhase)
+    //console.log(this.props.appData.animationPhase)
     switch (this.props.appData.animationPhase) {
       case INTRO_ANIMATION:
         setTimeout(
@@ -108,7 +108,7 @@ jewelMaker = (r, c, duration) =>{
         );
         break;
       case CHECK_FOR_SEQUENCES:
-        this.props.dispatch(onCheckForSequences(HIGHLIGHT_SEQUENCES));
+        this.props.dispatch(onCheckForSequences(HIGHLIGHT_SEQUENCES, NEUTRAL));
         break;
       case HIGHLIGHT_SEQUENCES:
         setTimeout(() => this.props.dispatch(onSequenceFound(COLLAPSE_SEQUENCE)), 0);
@@ -123,19 +123,19 @@ jewelMaker = (r, c, duration) =>{
         setTimeout(() => this.props.dispatch(onRemoveExiters(APPLY_GRAVITY)), 0);
         break;
       case APPLY_GRAVITY:
-        setTimeout(() => this.props.dispatch(onApplyGravity(REPLACE_MISSING)), 0);
+        setTimeout(() => this.props.dispatch(onApplyGravity(COMPLETE_SWAP, this.jewelMaker)), 0);
         break;
-      case REPLACE_MISSING:
-        setTimeout(
-          () =>
-            this.props.dispatch(
-              onReplaceMissing(COMPLETE_SWAP, this.jewelMaker)
-            ),
-          100
-        );
-        break;
+      // case REPLACE_MISSING:
+      //   setTimeout(
+      //     () =>
+      //       this.props.dispatch(
+      //         onReplaceMissing(COMPLETE_SWAP, this.jewelMaker)
+      //       ),
+      //     100
+      //   );
+      //   break;
       case COMPLETE_SWAP:
-        setTimeout(() => this.props.dispatch(onCompleteSwappingJewels(NEUTRAL)), 800);
+        setTimeout(() => this.props.dispatch(onCompleteSwappingJewels(CHECK_FOR_SEQUENCES)), 500);
         break;
       default:
         return;
@@ -143,10 +143,10 @@ jewelMaker = (r, c, duration) =>{
   }
 
   render() {
-    console.log(
-      this.props.appData.jewels.length,
-      this.props.appData.animationPhase
-    );
+    // console.log(
+    //   this.props.appData.jewels.length,
+    //   this.props.appData.animationPhase
+    // );
     //styled components block the triggering of children component lifecycles?
     const jewels = this.props.appData.jewels.map((j, i) => (
       <Jewel key={"jewel" + i} {...j} />
