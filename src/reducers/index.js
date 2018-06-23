@@ -292,7 +292,7 @@ const _removeShrunks = jewels => {
   return jewels.filter(j => j.animate.direction !== "shrink");
 };
 
-const _replaceMissingJewels = (jewels, onclick) => {
+const _replaceMissingJewels = (jewels, jewelMaker) => {
   let normal = [],
     active = [],
     gaps = _findGaps(jewels);
@@ -301,25 +301,9 @@ const _replaceMissingJewels = (jewels, onclick) => {
     return { ...j, animate: { direction: "static" } };
   });
   if (gaps.length) {
-    console.log("There are missing jewels");
     active = gaps.map(j => {
       const duration = "0.6s"; //(j[0]+1) * 0.09 + "s";
-      return {
-        jewelType:
-          _basicJewelTypes[Math.floor(Math.random() * _basicJewelTypes.length)],
-        row: j[0],
-        column: j[1],
-        onJewelClick: function () {onclick(this.row, this.column);},
-        width:
-          document.getElementsByClassName("game-surface")[0].clientWidth /
-          _numCols,
-        height:
-          document.getElementsByClassName("game-surface")[0].clientHeight /
-          _numRows,
-        animate: { direction: "south", magnitude: _numRows - j[0], duration },
-        isSelected: false,
-        highLighted: false
-      };
+      return jewelMaker(j[0], j[1], duration);
     });
   }
 
@@ -449,7 +433,7 @@ function appData(
         ...state,
         //avoid sending clickHandler thru action -
         // - use a factory function 
-        jewels: _replaceMissingJewels(state.jewels, action.onClickHandler),
+        jewels: _replaceMissingJewels(state.jewels, action.jewelMaker),
         animationPhase: INTRO_ANIMATION
       };
     case JEWEL_CLICK:

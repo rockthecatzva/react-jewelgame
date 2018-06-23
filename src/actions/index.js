@@ -31,64 +31,73 @@ export const onJewelClick = (row, column) => {
     }
 }
 
-export const onJewelsCreated = (jewels) => {
+export const onJewelsCreated = (nextPhase, jewels) => {
     return {
         type: JEWELS_CREATED,
-        jewels
+        jewels,
+        nextPhase
     }
 }
 
-export const onIntroComplete = () => {
+export const onIntroComplete = (nextPhase) => {
     return {
-        type: INTRO_COMPLETE
+        type: INTRO_COMPLETE,
+        nextPhase
     }
 }
 
 
 
-export const onCheckForSequences = () => {
+export const onCheckForSequences = (nextPhase) => {
     return {
-        type: CHECK_FOR_SEQUENCES
+        type: CHECK_FOR_SEQUENCES,
+        nextPhase
     }
 }
 
-export const onSequenceFound = ()=>{
+export const onSequenceFound = (nextPhase)=>{
     return {
-        type: SEQUENCE_FOUND
+        type: SEQUENCE_FOUND,
+        nextPhase
     }
 }
 
 
 
-export const onCollapse = ()=>{
+export const onCollapse = (nextPhase)=>{
     return {
-        type: COLLAPSE_COMPLETE
+        type: COLLAPSE_COMPLETE,
+        nextPhase
     }
 }
 
 
-export const onAnimateExit = ()=>{
+export const onAnimateExit = (nextPhase)=>{
     return {
-        type: EXIT_ANIMATION
+        type: EXIT_ANIMATION,
+        nextPhase
     }
 }
 
-export const onApplyGravity = ()=>{
+export const onApplyGravity = (nextPhase)=>{
     return {
-        type: APPLY_GRAVITY
+        type: APPLY_GRAVITY,
+        nextPhase
     }
 }
 
-export const onRemoveExiters = () =>{
+export const onRemoveExiters = (nextPhase) =>{
     return {
-        type: REMOVE_EXITED
+        type: REMOVE_EXITED,
+        nextPhase
     }
 }
 
-export const onReplaceMissing = (onClickHandler) =>{
+export const onReplaceMissing = (nextPhase, jewelMaker) =>{
     return {
         type: REPLACE_MISSING,
-        onClickHandler
+        jewelMaker,
+        nextPhase
     }
 }
 
@@ -99,16 +108,18 @@ export const onJewelSwap = (j1, j2) =>{
     }
 }
 
-export const onSelectJewel = (row, column)=>{
+export const onSelectJewel = (nextPhase , row, column)=>{
     return {
         type: SELECT_JEWEL,
         row,
-        column
+        column,
+        nextPhase
     }
 }
 
-export const onCompleteSwappingJewels = ()=>{
+export const onCompleteSwappingJewels = (nextPhase)=>{
     return {
-        type: COMPLETE_SWAP
+        type: COMPLETE_SWAP,
+        nextPhase
     }
 }
