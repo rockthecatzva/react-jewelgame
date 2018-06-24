@@ -7,10 +7,6 @@ import deepEqual from 'deep-equal';
 export default class Jewel extends Component {
     _animDuration = ".40s";
 
-    componentDidUpdate(){
-        console.log("jewel updated")
-    }
-
     shouldComponentUpdate(nextProps, nextState){
         const {jewelType, row, column, isSelected, animate, highLighted} = this.props;
 
@@ -54,6 +50,7 @@ export default class Jewel extends Component {
         const { width, height, row, column, isSelected, animate, highLighted } = this.props;
         const border = isSelected ? "solid 5px black" : "none 0px";
         
+        //console.log(animate)
         const shiftPercent = animate.magnitude * 100;
 
         const north = keyframes`

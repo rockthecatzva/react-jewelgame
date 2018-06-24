@@ -1,76 +1,28 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
-import { range, max } from "ramda";
+//import styled from "styled-components";
+//import { range, max } from "ramda";
 import Jewel from "../components/Jewel";
 //import "../style.css";
 
 import {
-  onJewelsCreated,
-  onIntroComplete,
-  onCheckForSequences,
-  onSequenceFound,
-  COLLAPSE_SEQUENCE,
-  onAnimateExit,
-  REMOVE_DUPLICATES,
-  onCollapse,
-  APPLY_GRAVITY,
-  onApplyGravity,
-  REMOVE_EXITED,
-  onRemoveExiters,
-  REPLACE_MISSING,
-  onReplaceMissing,
+  onInitGame,
   onJewelSwap,
   onSelectJewel,
-  onCompleteSwappingJewels,
-  COMPLETE_SWAP,
-  INTRO_ANIMATION,
-  CHECK_FOR_SEQUENCES,
-  HIGHLIGHT_SEQUENCES,
   NEUTRAL
 } from "../actions";
 import {
-  _basicJewelTypes,
   _numCols,
   _numRows,
 } from "../constants";
 
 class App extends React.Component {
   state = { selectedJewel: [], jewelData: [] };
-
-jewelMaker = (r, c, duration) =>{
-    return {
-        jewelType:
-          _basicJewelTypes[
-            Math.floor(Math.random() * _basicJewelTypes.length)
-          ],
-        row: r,
-        column: c,
-        onJewelClick: this.onJewelClick,
-        width:
-          document.getElementsByClassName("game-surface")[0].clientWidth /
-          _numCols,
-        height:
-          document.getElementsByClassName("game-surface")[0].clientHeight /
-          _numRows,
-        animate: duration ? { direction: "south", magnitude: _numRows, duration } : {direction: "static"},
-        isSelected: false,
-        highLighted: false
-      }
-}
+  _timer = undefined;
 
   initGame = () => {
-    let tempSet = [];
-
-    for (var a = 0; a < _numCols; a++) {
-      for (var b = 0; b < _numRows; b++) {
-        const duration = _numRows * 0.075 + "s",
-            tempJewel = this.jewelMaker(b, a, duration);
-        tempSet.push(tempJewel);
-      }
-    }
-
-    this.props.dispatch(onJewelsCreated(INTRO_ANIMATION, tempSet));
+    window.clearTimeout(this._timer)
+    this.props.dispatch(onInitGame(_numRows, _numCols));
   };
 
   onJewelClick = (row, col) => {
@@ -99,38 +51,55 @@ jewelMaker = (r, c, duration) =>{
   };
 
   componentDidUpdate(prevProps, prevState) {
-    //console.log(this.props.appData.animationPhase)
-    switch (this.props.appData.animationPhase) {
-      case INTRO_ANIMATION:
-        setTimeout(
-          () => this.props.dispatch(onIntroComplete(CHECK_FOR_SEQUENCES)),
-          800
-        );
-        break;
-      case CHECK_FOR_SEQUENCES:
-        this.props.dispatch(onCheckForSequences(HIGHLIGHT_SEQUENCES, NEUTRAL));
-        break;
-      case HIGHLIGHT_SEQUENCES:
-        setTimeout(() => this.props.dispatch(onSequenceFound(COLLAPSE_SEQUENCE)), 0);
-        break;
-      case COLLAPSE_SEQUENCE:
-        setTimeout(() => this.props.dispatch(onCollapse(REMOVE_DUPLICATES)), 250);
-        break;
-      case REMOVE_DUPLICATES:
-        this.props.dispatch(onAnimateExit(REMOVE_EXITED));
-        break;
-      case REMOVE_EXITED:
-        setTimeout(() => this.props.dispatch(onRemoveExiters(APPLY_GRAVITY)), 0);
-        break;
-      case APPLY_GRAVITY:
-        setTimeout(() => this.props.dispatch(onApplyGravity(COMPLETE_SWAP, this.jewelMaker)), 0);
-        break;
-      case COMPLETE_SWAP:
-        setTimeout(() => this.props.dispatch(onCompleteSwappingJewels(CHECK_FOR_SEQUENCES)), 500);
-        break;
-      default:
-        return;
+    const {appData} = this.props;
+
+    if(appData.nextDispatchEvent){
+      //pass jewelMaker down to ALL dispatch events?
+      //or
+      //add it to state??
+      //or
+      //move it to reducers and move that logic out of App.js
+      this._timer = setTimeout(() => this.props.dispatch(appData.nextDispatchEvent), appData.dispatchDelay)
     }
+
+    //console.log(this.props.appData.animationPhase)
+    // switch (appData.animationPhase) {
+    //   case INTRO_ANIMATION:
+    //     console.log(this.props.appData.nextDispatchEvent)
+    //     // setTimeout(
+    //     //   () => this.props.dispatch(onIntroComplete()),
+    //     //   800
+    //     // );
+
+    //     setTimeout(() => this.props.dispatch(appData.nextDispatchEvent), appData.dispatchDelay)
+    //     break;
+    //   case CHECK_FOR_SEQUENCES:
+    //   //console.log(this.props.appData, this.props.appData.nextDispatchEvent)
+    //     this.props.dispatch(onCheckForSequences());
+    //     break;
+    //   case HIGHLIGHT_SEQUENCES:
+    //     setTimeout(() => this.props.dispatch(onSequenceFound()), 0);
+    //     break;
+    //   case COLLAPSE_SEQUENCE:
+    //     setTimeout(() => this.props.dispatch(onCollapse()), 250);
+    //     break;
+    //   case REMOVE_DUPLICATES:
+    //     this.props.dispatch(onAnimateExit());
+    //     break;
+    //   case REMOVE_EXITED:
+    //     setTimeout(() => this.props.dispatch(onRemoveExiters()), 0);
+    //     break;
+    //   case APPLY_GRAVITY:
+    //     setTimeout(() => this.props.dispatch(onApplyGravity(this.jewelMaker)), 0);
+    //     break;
+    //   case COMPLETE_SWAP:
+    //     setTimeout(() => this.props.dispatch(onCompleteSwappingJewels()), 500);
+    //     break;
+    //   default:
+    //     return;
+    // }
+
+
   }
 
   render() {
