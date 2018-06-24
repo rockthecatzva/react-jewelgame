@@ -125,15 +125,6 @@ jewelMaker = (r, c, duration) =>{
       case APPLY_GRAVITY:
         setTimeout(() => this.props.dispatch(onApplyGravity(COMPLETE_SWAP, this.jewelMaker)), 0);
         break;
-      // case REPLACE_MISSING:
-      //   setTimeout(
-      //     () =>
-      //       this.props.dispatch(
-      //         onReplaceMissing(COMPLETE_SWAP, this.jewelMaker)
-      //       ),
-      //     100
-      //   );
-      //   break;
       case COMPLETE_SWAP:
         setTimeout(() => this.props.dispatch(onCompleteSwappingJewels(CHECK_FOR_SEQUENCES)), 500);
         break;
