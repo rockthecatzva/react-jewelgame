@@ -78,7 +78,7 @@ export default class Jewel extends Component {
 
         let animation = "";
         let startR = row, startC = column;
-        const easeInCubic = " cubic-bezier(0.550, 0.055, 0.675, 0.190)"
+        const easeInCubic = " ease-in"//" cubic-bezier(0.550, 0.055, 0.675, 0.190)"
 
         const { duration } = this.props.animate;
 

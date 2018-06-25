@@ -32,12 +32,7 @@ import {
   onResetJewelAnimations
 } from "../actions";
 
-import {
-  _numCols,
-  _numRows,
-  _basicJewelTypes,
-
-} from "../constants";
+import { _numCols, _numRows, _basicJewelTypes } from "../constants";
 
 const _checkForSequences = jewels => {
   let seqCt = 0;
@@ -233,17 +228,16 @@ const _animateCollapse = jewels => {
   return [...normal, ...animateElimJewels];
 };
 
-const _animateRemoval = jewels => {
-  const active = jewels.filter(j => j.animate.direction !== "static").map(j => {
-    return { ...j, animate: { direction: "shrink", duration: "0.2s" } };
-  });
-  const normal = jewels.filter(j => j.animate.direction === "static");
-
-  return [...active, ...normal];
+const _gravityDuration = rows => {
+  console.log(rows);
+  //return "0.6s"
+  return rows * 0.18 + "s";
 };
 
 const _removeDuplicates = jewels => {
-  const active = jewels.filter(j => j.animate.direction !== "static").map(j => ({ ...j, animate: { direction: "shrink", duration: "0.2s" } })),
+  const active = jewels
+      .filter(j => j.animate.direction !== "static")
+      .map(j => ({ ...j, animate: { direction: "shrink", duration: "0.2s" } })),
     normal = jewels.filter(j => j.animate.direction === "static");
 
   //console.log(active)
@@ -267,86 +261,63 @@ const _findGaps = jewels => {
   return gaps;
 };
 
-const _applyGravity = (jewels) => {
-  // /console.log("DONT NEED TO BE SPLITTING UP NORMAL AND ACTIVE ANYMORE!!!");
+const _applyGravity = jewels => {
   let gaps = _findGaps(jewels);
-
-  let normal = [],
-    active = [];
-
-  const duration = (dist) => {
-    const minDur = 0.4,
-      calcDur = dist * 0.12;
-
-    //return (calcDur > minDur ? calcDur : minDur) + "s"
-    return (minDur) + "s"
-  }
 
   const updatedJewels = jewels.map(j => {
     let g = gaps.filter(
       g =>
         g[1] === j.column && g[0] >= j.row && j.animate.direction === "static"
     ); //find gaps in my column
-    if (g) {
-
-
-      return ({
+    //console.log("looked for gaps ", g)
+    ///debugger
+    if (g.length) {
+      //console.log("applying gravity to existing stacks")
+      return {
         ...j,
         row: j.row + g.length,
-        animate: { direction: "south", magnitude: g.length, duration: duration(g.length) }
-      });
+        animate: {
+          direction: "south",
+          magnitude: g.length,
+          duration: _gravityDuration(g.length)
+        }
+      };
+    } else {
+      //console.log("no gaps in my column")
+      return j;
     }
-    return j
   });
 
+  //replace missing jewels
   let newjewels = [];
   let newJewelsCols = [];
   if (gaps.length) {
     newjewels = gaps.map(j => {
+      //console.log("filling gaps")
       //count # of jewels in column
       let colCt = jewels.filter(oldjewel => {
-        return oldjewel.column === j[1]
+        return oldjewel.column === j[1];
       }).length;
 
       let newJewelsInCol = newJewelsCols[j[1]] ? newJewelsCols[j[1]] + 1 : 1;
       newJewelsCols[j[1]] = newJewelsInCol;
 
-      //colCt += 
+      //colCt +=
       const r = _numCols - (newJewelsInCol + colCt);
       //debugger
-      return _jewelMaker(r, j[1], duration(r));
+      return _jewelMaker(r, j[1], _gravityDuration(newJewelsInCol + colCt), newJewelsInCol + colCt );
     });
-
   }
 
-  return [...updatedJewels, ...newjewels]//[...normal, ...active, ...newjewels];
+  return [...updatedJewels, ...newjewels]; //[...normal, ...active, ...newjewels];
 };
 
 const _removeShrunks = jewels => {
   return jewels.filter(j => j.animate.direction !== "shrink");
 };
 
-const _replaceMissingJewels = (jewels, jewelMaker) => {
-  let normal = [],
-    active = [],
-    gaps = _findGaps(jewels);
-
-  normal = jewels.map(j => {
-    return { ...j, animate: { direction: "static" } };
-  });
-  if (gaps.length) {
-    active = gaps.map(j => {
-      const duration = "0.6s"; //(j[0]+1) * 0.09 + "s";
-      return jewelMaker(j[0], j[1], duration);
-    });
-  }
-
-  return [...active, ...normal];
-};
-
 const _swapJewels = (j1, j2, jewels) => {
   //console.log("SWAPPIGN JULES");
-
   const rowDiff = j1[0] - j2[0],
     colDiff = j1[1] - j2[1];
 
@@ -393,26 +364,25 @@ const _swapJewels = (j1, j2, jewels) => {
   ];
 };
 
-const _jewelMaker = (r, c, duration) => {
+const _jewelMaker = (r, c, duration, startR) => {
   return {
     jewelType:
-      _basicJewelTypes[
-      Math.floor(Math.random() * _basicJewelTypes.length)
-      ],
+      _basicJewelTypes[Math.floor(Math.random() * _basicJewelTypes.length)],
     row: r,
     column: c,
     onJewelClick: this.onJewelClick,
     width:
-      document.getElementsByClassName("game-surface")[0].clientWidth /
-      _numCols,
+      document.getElementsByClassName("game-surface")[0].clientWidth / _numCols,
     height:
       document.getElementsByClassName("game-surface")[0].clientHeight /
       _numRows,
-    animate: duration ? { direction: "south", magnitude: _numRows+r, duration } : { direction: "static" },
+    animate: duration
+      ? { direction: "south", magnitude: startR, duration }
+      : { direction: "static" },
     isSelected: false,
     highLighted: false
-  }
-}
+  };
+};
 
 const _initJewels = (rows, cols) => {
   //console.log(rows, cols)
@@ -421,22 +391,12 @@ const _initJewels = (rows, cols) => {
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      //console.log(_jewelMaker(r, c, dur))
-      jewels.push(_jewelMaker(r, c, dur));
+      jewels.push(_jewelMaker(r, c, _gravityDuration(rows), r+_numRows));
     }
   }
 
-  // new Array(rows).fill(null).map((r,i)=>{
-  //   return new Array(cols).fill(null).map((c,e)=>{
-  //     const dur = rows * 0.075 + "s";
-  //     //console.log( _jewelMaker(i,e, dur))
-  //     return _jewelMaker(i,e, dur);
-  //   })
-  // })
-
   return jewels;
-}
-
+};
 
 function appData(
   state = {
@@ -460,17 +420,18 @@ function appData(
         animationPhase: NEUTRAL,
         nextDispatchEvent: undefined,
         dispatchDelay: 0,
-        jewels: _initJewels(action.rows, action.columns),//action.jewels,
+        jewels: _initJewels(action.rows, action.columns), //action.jewels,
         //animationPhase: INTRO_ANIMATION,
         nextDispatchEvent: onIntroComplete(),
-        dispatchDelay: 1000
+        dispatchDelay: 1800
       };
     case INTRO_COMPLETE:
       const jewels = state.jewels.map(j => {
         return { ...j, animate: { direction: "static" } };
       });
       return {
-        ...state, jewels,
+        ...state,
+        jewels,
         //animationPhase: CHECK_FOR_SEQUENCES,
         nextDispatchEvent: onCheckForSequences(),
         dispatchDelay: 0
@@ -491,7 +452,8 @@ function appData(
         jewels: [...highlightJewels, ...normalJewels],
         //animationPhase:
         //highlightJewels.length > 0 ? HIGHLIGHT_SEQUENCES : NEUTRAL,
-        nextDispatchEvent: highlightJewels.length > 0 ? onSequenceFound() : onNoSequenceFound(),
+        nextDispatchEvent:
+          highlightJewels.length > 0 ? onSequenceFound() : onNoSequenceFound(),
         dispatchDelay: 200
       };
     case SEQUENCE_FOUND:
@@ -525,7 +487,7 @@ function appData(
         jewels: _applyGravity(state.jewels),
         //animationPhase: RESET_JEWEL_ANIMATE,
         nextDispatchEvent: onResetJewelAnimations(),
-        dispatchDelay: 200
+        dispatchDelay: 1000
       };
     // case JEWEL_CLICK:
     //   return {
@@ -561,14 +523,11 @@ function appData(
         //animationPhase: CHECK_FOR_SEQUENCES
         nextDispatchEvent: onCheckForSequences(),
         dispatchDelay: 0
-
       };
     default:
       return state;
   }
 }
-
-
 
 const rootReducer = combineReducers({
   appData
